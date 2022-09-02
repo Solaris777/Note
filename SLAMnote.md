@@ -73,6 +73,18 @@
 
 * git init
 
+* git add 文件名
+
+* git commit -m "注释"
+
+* git branch -M main
+
+* git remote add origin git@github.com:用户名/仓库名
+
+* git push -u origin main （第一次提交）
+
+* git push origin master  （以后提交）
+
 
 
 ## CMake编译
