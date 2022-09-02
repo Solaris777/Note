@@ -83,7 +83,7 @@
 
 * git push -u origin main （第一次提交）
 
-* git push origin master  （以后提交）?
+* git push origin master  （以后提交）
 
 
 
