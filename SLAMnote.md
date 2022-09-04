@@ -81,7 +81,7 @@
 
 * git remote add origin git@github.com:用户名/仓库名
 
-* git push -u origin main （第一次提交）
+* git push -u origin main （第一次提交）?
 
 * git push origin master  （以后提交）
 
@@ -119,12 +119,17 @@
 
 ##### 初始化
 
-* **直接法**：`vector<T> v1`
+- **直接法**：`vector<T> v1`
 
-* 初始化并**赋值**：`vector<T> v2(v1)`（将v1的元素赋值给v2，类型必须相同）
+- 初始化并**赋值**：`vector<T> v2(v1)`（将v1的元素赋值给v2，类型必须相同）
 
-* **列表**初始化：`vector<T> v1={1，2}`：v1的元素为1，2
-* **构造对象**初始化：`vector<int> v1(10,1)`：v1拥有10个相同元素，均为1
+- **列表**初始化：`vector<T> v1={1，2}`：v1的元素为1，2
+
+- **构造对象**初始化：`vector<int> v1(1`
+
+  
+
+  `0,1)`：v1拥有10个相同元素，均为1
 
 注：组成vector的元素也可以是vector，如`vector<vector<int>>`，代表一个vector，里面的元素均是`vector<int>`类
 
