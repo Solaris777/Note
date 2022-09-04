@@ -61,29 +61,22 @@
 * `git rm 文件名`：删除单个文件（`git rm * -r`删除全部文件）
 * `ssh-keygen -t rsa -C 邮箱地址`：获取SSH
 
-注：所有增删操作都要加上**add->commit->pull->push**
-
 
 
 ### 使用git流程
 
 * 在github中创建一个新的仓库
-
 * 在需要上传文件的文件夹中初始化仓库，选择Git Bash Here
+* `git init`
+* `git add` 文件名*
+* `git commit -m "注释"`*
+* `git branch -M main`
+* `git remote add origin git@github.com:用户名/仓库名`
+* `git pull origin 分支名`：将代码更新和远程仓库一致*
+* `git push -u origin main` （第一次提交）
+* `git push origin main`  （以后提交）*
 
-* git init
-
-* git add 文件名
-
-* git commit -m "注释"
-
-* git branch -M main
-
-* git remote add origin git@github.com:用户名/仓库名
-
-* git push -u origin main （第一次提交）?
-
-* git push origin master  （以后提交）
+注：带*为重复使用流程
 
 
 
@@ -199,6 +192,8 @@ for (auto i : vec) {
 
 
 #### eigen库
+
+注：本书中#include<Eigen/Core>均要改为#include<eigen3/Eigen/Core>
 
 ##### **norm**函数：
 
@@ -360,4 +355,11 @@ cout<<"遍历图像用时: "<<chrono::duration <double> (diff).count()<<" s"<<en
 ### 曲线拟合问题
 
 #### P134 手写高斯牛顿法
+
+* 生成一个服从均值为0，标准差为val的高斯分布随机数：`rng.gaussian(val)`
+* 判断是否为非法数字函数：`isnan(x)`，方程无解，则x为非法字符nan(not a number)，函数返回0；否则返回1
+* 矩阵的转置：`Matrix.transpose()`
+* 求解线性方程Hx=b：
+  * QR分解：`H.colPivHouseholderQr().solve(b);`
+  * cholesky分解：`H.ldlt().solve(b);`
 
