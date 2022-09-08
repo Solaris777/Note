@@ -5,6 +5,8 @@
 ### 系统命令行
 
 * `sudo apt-get install xxx`：安装xxx
+* `sudo apt-get remove xxx`：卸载xxx（apt在线安装卸载）
+* `sudo dpkg -r xxx `：卸载xxx（deb文件格式卸载）
 * `cd home`：切换到home目录
 * `cd ..`：切换到上级目录
 * `touch xxx.cpp`：创建一个cpp文件
@@ -14,6 +16,7 @@
 * `pwd`：显示当前文件的绝对路径
 * `cat 文件名`：查看文件内容
 * `vi`：修改文件
+* `./xxx.sh`：运行xxx应用程序（脚本文件一般在bin文件夹里）
 
 
 
@@ -68,7 +71,10 @@
 * 在github中创建一个新的仓库
 * 在需要上传文件的文件夹中初始化仓库，选择Git Bash Here
 * `git init`
-* `git add` 文件名*
+* 上传文件*
+  * 上传某个文件：`git add "文件名"`
+  * 上传全部文件：`git add .`
+
 * `git commit -m "注释"`*
 * `git branch -M main`
 * `git remote add origin git@github.com:用户名/仓库名`
@@ -208,6 +214,10 @@ for (auto i : vec) {
 ##### normalize函数
 
 把自身的各元素除以它的范数，**返回值为void**（自身修改），用于**四元数归一化**
+
+* `Eigen::Vector3d`的两种表达方式：
+  * (row,col)表示某行某列，一般用于矩阵
+  * [row]表示某行，一般用于列向量
 
 
 
@@ -363,3 +373,211 @@ cout<<"遍历图像用时: "<<chrono::duration <double> (diff).count()<<" s"<<en
   * QR分解：`H.colPivHouseholderQr().solve(b);`
   * cholesky分解：`H.ldlt().solve(b);`
 
+
+
+#### P138 Ceres库的使用
+
+* 介绍：
+
+  ![image-20220904193317925](/home/hzc/Note/image-20220904193317925.png)
+  
+* 使用流程
+  * **构建代价函数**cost function，其形式为结构体，并**重载()运算符**
+  * 通过代价函数**构建待求解的优化问题**
+  * **配置求解器参数**并求解问题
+
+
+
+贴一波线性拟合的helloworld代码：
+
+```C++
+#include <iostream>
+#include <ceres/ceres.h>
+
+using namespace std;
+using namespace ceres;
+//第一部分：构建代价函数f(x)=10-x
+struct CostFunctor {
+    template <typename T>
+    bool operator()(const T* const x, T* residual) const 
+    {
+        residual[0] = T(10.0) - x[0];
+        return true;
+    }
+};
+
+//主函数
+int main(int argc, char** argv) {
+    google::InitGoogleLogging(argv[0]);
+
+    // 寻优参数x的初始值，为5
+    double initial_x = 5.0;
+    double x = initial_x;
+
+    // 第二部分：构建寻优问题
+    Problem problem;
+    CostFunction* cost_function = new AutoDiffCostFunction<CostFunctor, 1, 1>(new CostFunctor); //使用自动求导，将之前的代价函数结构体传入，第一个1是输出维度，即残差的维度，第二个1是输入维度，即待寻优参数x的维度。
+    problem.AddResidualBlock(cost_function, NULL, &x); //向问题中添加误差项，本问题比较简单，添加一个就行。
+
+    //第三部分： 配置并运行求解器
+    Solver::Options options;
+    options.linear_solver_type = ceres::DENSE_QR; //配置增量方程的解法
+    options.minimizer_progress_to_stdout = true;//输出到cout
+    Solver::Summary summary;//优化结果
+    Solve(options, &problem, &summary);//求解!!!
+
+    std::cout << summary.BriefReport() << "\n";//输出优化的简要信息
+    //最终结果
+    std::cout << "x : " << initial_x
+              << " -> " << x << "\n";
+    return 0;
+}
+
+```
+
+第一部分
+
+* `CostFunctor`结构体：用于重载()运算符，构造某个**参数类型为(向量)指针**，**返回值为bool类型**的代价函数
+
+
+
+* ``google::InitGoogleLogging(argv[0]);`固定格式
+
+
+
+第二部分
+
+* `ceres::AutoDiffCostFunction<CostFunctor, int residualDim, int paramDim>(CostFunctor* functor);`模板参数依次为仿函数（functor）类型CostFunctor，残差维数residualDim和待优化变量维数paramDim，接受参数类型为仿函数指针CostFunctor *，返回类型为CostFunction *
+* `Problem::AddResidualBlock(CostFunction *cost_funtion,LossFunction *loss_function,double *x0,double *x1...)`向Problem类传递残差块信息，参数分别为代价函数，损失函数（可以取NULL），估计参数
+
+
+
+第三部分
+
+* `options.linear_solver_type`配置求解器类型，默认为SPARSE_NORMAL_CHOLESKY（cholesky分解），否则为DENSE_QR（QR分解）
+* `options.minimizer_progress_to_stdout = true`固定格式
+* `options.minimizer_progress_to_stdout`迭代直到输出
+* `ceres::Solve(options, &problem, &summary);`求解函数，参数分别为求解器配置options的引用，问题的地址&problem，求解结果的地址&summary
+
+
+
+贴部分非线性拟合的helloworld的代码：
+
+```C++
+//1.代价函数结构体
+//附带x y的构造函数
+struct ExponentialResidual {
+    ExponentialResidual(double x, double y) : x_(x), y_(y) {}   //初始化成员变量（初始化列表）
+
+    template <typename T> bool operator()(const T* const m, const T* const c, T* residual) const {
+        residual[0] = y_ - exp(m[0] * x_ + c[0]);
+        return true;
+    }
+
+private:
+    const double x_;
+    const double y_;
+};
+
+    //构建寻优问题
+    //用for循环将残差项加入到problem中
+    //kNumObservations为样本数
+    Problem problem;
+    for (int i = 0; i < kNumObservations; ++i) 
+    {
+        problem.AddResidualBlock(new       AutoDiffCostFunction<ExponentialResidual, 1, 1, 1>(new ExponentialResidual(data[2 * i], data[2 * i + 1])),NULL,&m, &c);
+    }
+    //这里把上面的两步合并成一步
+
+    //配置并运行求解器
+    Solver::Options options;
+    options.max_num_iterations = 25;
+    options.linear_solver_type = ceres::DENSE_QR;
+    options.minimizer_progress_to_stdout = true;
+```
+
+* `options.max_num_iterations`设定最大迭代次数
+* 注：非线性拟合与线性拟合大同小异，注意以下几点：
+  * x y作为代表某些样本数的变量，由for循环代入函数表达式中，看作常量
+  * 需要设定**最大迭代次数**
+  * 函数后面加**const**修饰的原因：防止误操作导致()重载函数内的变量被修改
+
+
+
+#### P144 g2o库的使用
+
+![img](https://images2015.cnblogs.com/blog/606958/201603/606958-20160321233900042-681579456.png)
+
+![image-20220907151834661](/home/hzc/Note/image-20220907151834661.png)
+
+![img](https://img-blog.csdnimg.cn/327c6cb7f6a844a29927b51ed8d7985a.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA54y_6ams,size_20,color_FFFFFF,t_70,g_se,x_16)
+
+* 详解代码步骤：
+
+1. 定义顶点的类型
+
+   Eigen字对齐
+
+   重写四个虚函数：
+
+   1. `virtual void setToOriginImpl()`顶点重置函数
+   2. `virtual void oplusImpl(const double *update)`顶点更新函数
+   3. `virtual bool read(istream &in) {}`存盘（留空）
+   4. `virtual bool write(ostream &out) const {}`读盘（留空）
+
+2. 定义边的类型（一元边：BaseUnaryEdge,二元边：BaseBinaryEdge,多元边：BaseMultiEdge）
+
+   Eigen字对齐
+
+   构造函数（继承）
+
+   重写四个虚函数：
+
+   1. `virtual void computeError()`计算曲线误差函数
+   2. `virtual void linearizeOplus()`计算雅克比矩阵
+   3. `virtual bool read(istream &in) {}`存盘（留空）
+   4. `virtual bool write(ostream &out) const {}`读盘（留空）
+
+3. 创建数据以及插入数据
+
+4. 构建图优化
+   1. 配置块求解器BlockSolver类型`g2o::BlockSolver<g2o::BlockSolverTraits<3, 1>>`，参数分别为优化变量维度，误差维度
+   2. 配置线性方程求解器LinearSolver，从PCG,CSparse,Choldmod,Dense中选一个作为求解方法，类型为`g2o::LinearSolverDense<BlockSolverType::PoseMatrixType>`
+   3. 配置总求解器solver，并从GN,LM,Dogleg优化算法中选一个，再用上述块求解器BlockSolver初始化
+   4. 配置图模型SparseOptimizer，设置求解器`setAlgorithm`，打开调试输出`setVerbose`
+   5. 往图中增加顶点
+      1. 利用类指针实例化对象
+      2. 设置优化变量`setEstimate`
+      3. 设置顶点编号`setId`
+      4. 向SparseOptimizer中添加顶点
+   6. 添加边
+      1. 利用类指针实例化对象
+      2. 定义边的编号`setId`
+      3. 设置连接的顶点`setVertex`
+      4. 设置观测数值`setMeasurement`
+      5. 设置信息矩阵（协方差矩阵之逆）`setInformation`
+      6. 向SparseOptimizer中添加边
+
+5. 启动优化
+
+   1. 设置初始值`initializeOptimization`
+   2. 设置迭代次数`optimize`
+   3. 输出优化值
+
+
+
+* 代码解释：
+
+https://blog.csdn.net/qq_41451702/article/details/122990734?spm=1001.2014.3001.5502
+
+
+
+* 额外注解：
+  * `EIGEN_MAKE_ALIGEND_OPERATOR_NEW`Eigen的使用时内存对齐
+  * `override`关键字，如果派生类在虚函数声明时使用了override描述符，那么该函数必须重载其基类中的同名函数，否则代码将无法通过编译。
+  * `static_cast<type-id>(expression)`**static_cast**把expression转换为type-id类型
+  * `CurveFittingEdge(double x) : BaseUnaryEdge(), _x(x) {}  `子类的构造函数中同时构造父类的构造函数以及变量初始化（初始化列表）
+  * `CurveFittingVertex *v = new CurveFittingVertex();`创建顶点实例，使用指针操作能够减少内存占用
+  * `typedef typename std::vector<T>::size_type size_type;`**typedef**作用为创建别名；**typename**作用为告诉编译器std::vector<T>::size_type是一个类型而不是一个成员，并且这里不能用**class**
+  * `_estimate`位于顶点的头文件内，用于存储优化变量（顶点）,函数`estimate()`可以返回`_estimate`
+  * `_measurement`、`_error`、`_vertices`、`_jacobianOplusXi`位于边的头文件内，分别存储观测值、误差、指向超边连接的顶点的指针向量（连接一个顶点值为0）、雅克比矩阵
