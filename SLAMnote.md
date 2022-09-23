@@ -112,11 +112,19 @@
 
 ## C++相关知识
 
+### main函数
+
+`int main(int argc,char **argv)`
+
+* main函数的参数值是从**操作系统命令行上获得的**，在**终端**输入**文件路径+文件名**即可传递参数
+* argc指的是**文件个数**，注意：文件本身也算一个参数
+* argv即**指向字符串的指针数组**， **argv[0]代表文件本身**，argv[1]代表传入的第一个文件
+
 ### STL容器
 
 #### vector类
 
-##### 初始化
+##### 类对象初始化
 
 - **直接法**：`vector<T> v1`
 
@@ -131,6 +139,22 @@
   `0,1)`：v1拥有10个相同元素，均为1
 
 注：组成vector的元素也可以是vector，如`vector<vector<int>>`，代表一个vector，里面的元素均是`vector<int>`类
+
+
+
+##### 初始化列表
+
+```C++
+class foo
+{
+public:
+foo(string s, int i):name(s), id(i){} ; // 初始化列表
+private:
+string name ;int id ;
+};
+```
+
+* 写在**构造函数**后面，以冒号开头，以成员名(值)的方式赋值
 
 
 
@@ -150,11 +174,13 @@
 vector<int> vec;
  
 //下面两者是等价的遍历
-for (auto iter = vec.begin(); iter != vec.end(); iter++) { // before c++11
+for (auto iter = vec.begin(); iter != vec.end(); iter++) 
+{ 
     cout << *iter << endl;
 }
  
-for (auto i : vec) { // c++11基于范围的for循环
+for (auto i : vec) 
+{ 
     cout << "i" << endl;
 }
 ```
@@ -164,16 +190,57 @@ for (auto i : vec) { // c++11基于范围的for循环
 如果要**修改**vec的内容：
 
 ```C++
-for (auto& i : vec) { 
-    i++;             增加vec元素中的值
-}
- 
-for (auto i : vec) { 
-    cout << "i" << endl;   输出vec的值
+for (auto& i : vec) 
+{ 
+    i++;             //增加vec元素中的值
 }
 ```
 
 使用**&**符号后表示它被声明为**引用变量**，成为了**元素本身**的别名，因此可以修改
+
+
+
+### 谓词与lambda表达式
+
+* 谓词：
+
+  * 定义：返回**bool类型**的仿函数称为谓词，意义为**改变算法的排序方式**
+
+  * 分类：如果operator()接受一个参数，叫做**一元谓词**；如果operator()接受的两个参数，叫做**二元谓词**
+
+  * 案例：一般用于排序算法、查找算法中（sort、find_if），`sort(begin,end,cmp)`中第三个参数即谓词，函数体一般为判断语句
+
+  * ```C++
+    bool cmp(int a,int b)
+    {
+        return a<b;
+    }
+    ```
+
+* lambda表达式：
+
+  * 定义：`[capture list] (parameter list) -> return type { function body }`，当谓词需要大于两个参数时使用，类似于函数，但其可能定义在函数内部
+
+  * [捕获列表]：即lambda**所在函数中定义的局部变量**的列表
+
+    * 若为空，则不能使用所在函数的变量
+    * 若为一个逗号分割的名字列表，则可以使用列表内的变量
+    * 若为&，则为隐式捕获列表，采用**引用捕获**方式，捕获函数的实体的引用，**允许改变其大小**
+    * 若为=，则为隐式捕获列表，采用**值捕获**方式，捕获函数的实体，**不允许改变其大小**
+
+  * (parameter)：参数列表（可省略）
+
+  * ->：尾置返回（一般不写）
+
+  * return type：返回值类型（一般不写）
+
+  * 案例：
+
+    ```C++
+    sort(word.begin(),word.end(),[] (const string &a,const string &b) {return a.size() < b.size()})
+    ```
+
+    
 
 
 
@@ -293,7 +360,9 @@ for (auto i : vec) {
 
 argc表示输入参数的个数，argv是指针数组，存放输入的参数（可以是文件）
 
-* 创建任意维度的稠密数组存储图像：`cv:Mat image`
+只需在终端输入文件的位置+文件名便按顺序匹配到argv数组中
+
+* 创建任意维度的**稠密数组**存储图像：`cv:Mat image`
 
 * 读取图像：`cv::imread(图片路径，图片标志)`（图片标志：彩色忽略透明色通道为1，灰度为0，全通道为-1）
 
@@ -332,6 +401,8 @@ argc表示输入参数的个数，argv是指针数组，存放输入的参数（
 
 https://blog.csdn.net/qq_41451702/article/details/121978707?spm=1001.2014.3001.5502
 
+注：终端输入图片命令：`可执行文件所在文件夹名称/可执行文件名称 图片1 图片2 ...`
+
 
 
 ##### chrono库
@@ -340,15 +411,14 @@ https://blog.csdn.net/qq_41451702/article/details/121978707?spm=1001.2014.3001.5
 
 ```C++
 #include<chrono>
-chrono::steady_clock::time_point  start =  chrono::steady_clock::now()
-auto start = chrono::steady_clock::now();
- 
-auto end = chrono::steady_clock::now();
- 
-auto diff = end - start;
-cout<<"遍历图像用时: "<<chrono::duration <double> (diff).count()<<" s"<<endl;
-//cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;(毫秒)
-//cout << chrono::duration <double, nano> (diff).count() << " ns" << endl;（纳秒）
+chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
+
+//运行的代码段
+
+chrono::steady_clock::time_point t2 = chrono::steady_clock::now();
+chrono::duration<double> time_used = chrono::duration_cast<chrono::duration<double>>(t2-t1);
+cout << "solve time cost = " << time_used.count() << "seconds. " << endl;
+
 ```
 
 
@@ -362,9 +432,18 @@ cout<<"遍历图像用时: "<<chrono::duration <double> (diff).count()<<" s"<<en
 
 
 
-### 曲线拟合问题
+### 曲线拟合问题（Ceres库和g2o库）
 
 #### P134 手写高斯牛顿法
+
+###### 详解代码步骤
+
+1. 定义H,b,迭代次数
+2. 计算误差e以及累加和cost
+3. 定义雅克比矩阵J，定义增量方程中H和b的更新方式
+4. 解出dx，并进行对估计值更新
+
+###### 注解
 
 * 生成一个服从均值为0，标准差为val的高斯分布随机数：`rng.gaussian(val)`
 * 判断是否为非法数字函数：`isnan(x)`，方程无解，则x为非法字符nan(not a number)，函数返回0；否则返回1
@@ -379,8 +458,8 @@ cout<<"遍历图像用时: "<<chrono::duration <double> (diff).count()<<" s"<<en
 
 * 介绍：
 
-  ![image-20220904193317925](/home/hzc/Note/image-20220904193317925.png)
-  
+![image-20220904193317925](/home/hzc/Note/image-20220904193317925.png)
+
 * 使用流程
   * **构建代价函数**cost function，其形式为结构体，并**重载()运算符**
   * 通过代价函数**构建待求解的优化问题**
@@ -438,8 +517,6 @@ int main(int argc, char** argv) {
 第一部分
 
 * `CostFunctor`结构体：用于重载()运算符，构造某个**参数类型为(向量)指针**，**返回值为bool类型**的代价函数
-
-
 
 * ``google::InitGoogleLogging(argv[0]);`固定格式
 
@@ -510,22 +587,22 @@ private:
 
 ![image-20220907151834661](/home/hzc/Note/image-20220907151834661.png)
 
-![img](https://img-blog.csdnimg.cn/327c6cb7f6a844a29927b51ed8d7985a.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA54y_6ams,size_20,color_FFFFFF,t_70,g_se,x_16)
+![g2o](/home/hzc/Note/g2o.png)
 
 * 详解代码步骤：
 
-1. 定义顶点的类型
+1. 定义顶点的类型(继承于g2o::BaseVertex)
 
    Eigen字对齐
 
    重写四个虚函数：
 
    1. `virtual void setToOriginImpl()`顶点重置函数
-   2. `virtual void oplusImpl(const double *update)`顶点更新函数
+   2. `virtual void oplusImpl(const double *update)`顶点更新函数，主要用于在使用增量方程计算出增量 Δ x 后，用来更新x (k+1) = x(k) + Δ x; 
    3. `virtual bool read(istream &in) {}`存盘（留空）
    4. `virtual bool write(ostream &out) const {}`读盘（留空）
 
-2. 定义边的类型（一元边：BaseUnaryEdge,二元边：BaseBinaryEdge,多元边：BaseMultiEdge）
+2. 定义边的类型(继承于g2o::BaseUnaryEdge)（一元边：BaseUnaryEdge,二元边：BaseBinaryEdge,多元边：BaseMultiEdge）
 
    Eigen字对齐
 
@@ -581,3 +658,212 @@ https://blog.csdn.net/qq_41451702/article/details/122990734?spm=1001.2014.3001.5
   * `typedef typename std::vector<T>::size_type size_type;`**typedef**作用为创建别名；**typename**作用为告诉编译器std::vector<T>::size_type是一个类型而不是一个成员，并且这里不能用**class**
   * `_estimate`位于顶点的头文件内，用于存储优化变量（顶点）,函数`estimate()`可以返回`_estimate`
   * `_measurement`、`_error`、`_vertices`、`_jacobianOplusXi`位于边的头文件内，分别存储观测值、误差、指向超边连接的顶点的指针向量（连接一个顶点值为0）、雅克比矩阵
+
+
+
+### OpenCV提取和匹配ORB特征（OpenCV库）
+
+#### 详解代码步骤
+
+1. 读取图像(imread)
+2. 初始化关键点(KeyPoint)，描述子(descriptors)，特征点检测器(FeatureDetector)，描述子提取器(DescriptorExtractor)，描述子匹配器(DescriptorMatcher)
+3. 检测Oriented FAST角点位置(detect)
+4. 计算BRIEF描述子(compute)
+5. 输出含角点图像
+6. BRIEF描述子匹配(match)
+7. 匹配点对筛选
+   1. 计算最大距离和最小距离(minmax_lelment排序，first对应最大值，second对应最小值)
+   2. 利用for 循环选出distance<=max(2*min,30)的good_matches
+8. 绘制匹配结果(drawMatches+imshow+waitKey)
+
+
+
+#### 注解
+
+* `assert()`断言函数，括号内值为真则编译通过，反则报错
+* `Ptr<>`OpenCV中的智能指针模板类，自动转换成该类型的指针
+* 关键点类型为`vector<KeyPoint>`,描述子类型为`Mat`,特征点检测器类型为`Ptr<FeatureDetetor>`,描述子提取器类型为`Ptr < DescriptorExtractor> `,描述子匹配器类型为`Ptr<DescriptorMatcher>`
+* `ORB::create()`由于OpenCV中的ORB类是一个纯虚类，无法进行实例化创建对象，因此通过该函数调用
+* `DescriptorMatcher::create("BruteForce-Hamming")`初始化描述子匹配器类型
+* `drawKeypoints()`输出标记关键点的图像，函数参数分别为：原图，原图关键点，带有关键点的输出图像，后面两个为默认值
+* `match()`对BRIEF描述子进行匹配，函数参数分别为：图1的描述子，图2的描述子，装载所有匹配描述子的容器
+* `minmax_element()`是返回**指向范围**内最小和最大元素的一对迭代器,它将较小的值作为第一个元素返回(**first表示**)，较大的值作为的第二个元素返回(**second表示**)。
+* `drawMatches()`画出所有的匹配结果，函数参数分别为：图1，图1关键点，图2，图2关键点，两张图片的关键点匹配数组，承接图像，默认值
+
+
+
+### 2D-2D 对级约束求解相机运动
+
+#### 详解代码步骤
+
+1. 提取特征点+特征点匹配
+2. 估计两张图像间运动
+   1. 转换匹配点形式(vector< Point2f >)
+   2. 计算基础矩阵(FundamentalMat)/本质矩阵(EssentialMat)/单应矩阵(Homography)（特征点共面）,选择method为8点法
+   3. 从本质矩阵中恢复R,t(recoverPose)
+3. 验证对级约束
+
+
+
+#### 注解
+
+* **Mat_**和**Mat**的区别：
+  * Mat_ 是**定义时**指定类型，如`Mat_<double> M(20,20);` `M(i,j) = ....`
+  * Mat 是**使用时**指定类型，如`M.at<double>(i,j) = ....`（给某行某列的元素赋值）
+  
+* 通过at读取Mat类的单通道矩阵元素：`a.at<数据类型>(x,y);`
+
+* queryIdx是图1中匹配的关键点的对应编号
+
+* trainIdx是图2中匹配的关键点的对应编号
+
+* 特征点的位置信息存储在keypoints关键点里面，使用`keypoints_1[good_matchers[i].queryIdx].pt` 转换成像素坐标(x,y)
+
+* `pixel2cam`函数作用为将像素坐标转换为归一化坐标，即
+  $$
+  \frac{X}{Z}=\frac{u-C_x}{f_x}
+  \\
+  \frac{Y}{Z}=\frac{v-C_y}{f_y}
+  $$
+
+* `void triangulatePoints(InputArray projMatr1, 
+                         InputArray projMatr2, 
+                         InputArray projPoints1, 
+                         InputArray projPoints2, 
+                         OutputArray points4D)`
+
+  projMatr1：第一个相机位姿（4x3的矩阵）
+  projMatr2：第二个相机位姿（4x3的矩阵）
+  projPoints1：第一个相机坐标系下的特征点坐标（需要转化为归一化坐标）
+  projPoints2：第二个相机坐标系下的特征点坐标
+
+  points4D：输出三角化后的特征点的3D坐标。但需要注意的是，输出的3D坐标是齐次坐标，共四个维度，因此需要将前三个维度除以第四个维度以得到非齐次坐标xyz
+
+* OpenCV `circle()`函数`circle(CvArr* img, CvPoint center, int radius, CvScalar color, int thickness=1, int lineType=8, int shift=0)`
+
+  这个函数其实就是画圆
+
+  img为源图像
+
+  center为画圆的圆心坐标
+
+  radius为圆的半径
+
+  color为设定圆的颜色，CV_RGB(255, 0,0)设置为红色，CV_RGB(255, 255,255)设置为白色，CV_RGB(0, 0,0)设置为黑色 
+
+  thickness 如果是正数，表示组成圆的线条的粗细程度。否则，-1表示圆是否被填充
+
+  line_type 线条的类型。默认是8
+
+  shift 圆心坐标点和半径值的小数点位数
+
+* 齐次坐标->非齐次坐标：对某一行的元素全部除以第n个元素值，并输出(n-1)个元素，例如
+  $$
+  (x_1,y_1,z_1,1)->(x_1,y_1,z_1)
+  $$
+
+
+
+### 3D-2D PnP问题求解
+
+#### 使用EPnP求解位姿
+
+###### 详解代码步骤
+
+1. 特征点提取+匹配+筛选
+2. `solvePnP`函数求解出旋转向量和平移向量
+3. 用`Rodrigues`公式实现旋转向量 ->旋转矩阵
+
+###### 注解
+
+* `ushort d = d1.ptr<unsigned short>(int(keypoints_1[m.queryIdx].pt.y))[int(keypoints_1[m.queryIdx].pt.x)];`其原型为`ushort d = d1.ptr<ushort>(y)[x];`，目的是**指定到d1矩阵的y行x列个像素**
+
+* OpenCV提供的PnP函数：`solvePnP(pts_3d,pts_2d,K,disCoeffs,rvec,tvec,false,flags)`
+
+  `disCoeffs`为相机的**畸变系数**
+
+  `rvec`为输出的**旋转向量**，世界坐标系->相机坐标系
+
+  `tvec`为输出的**平移向量**，世界坐标系->相机坐标系
+
+  `flags`默认使用SOLVEONO_ITERATIVE迭代法
+
+* `Rodrigues(r,R)`旋转向量->旋转矩阵
+
+
+
+#### 使用g2o进行BA优化（再用g2o）
+
+###### 详解代码步骤
+
+1. 创建一个BlockSolver（类型命名简化）
+
+   配置块求解器BlockSolver类型，参数分别为优化变量维度，误差维度
+
+2. 创建线性求解器LinearSolver，并用上面定义的BlockSolver初始化（类型命名简化）
+
+   配置线性方程求解器LinearSolver，从PCG,CSparse,Choldmod,Dense中选一个作为求解方法
+
+3. 创建总求解器solver，并从GN/LM/DogLeg中选一个作为迭代策略，再用上述块求解器BlovkSolver初始化
+
+4. 创建图优化的核心：稀疏优化器（SparseOptimizer）
+
+5. 定义图的顶点和边，并添加到SparseOptimizer
+
+   1. 定义顶点的类型(继承于g2o::BaseVertex)
+
+      Eigen字对齐
+
+      重写四个虚函数：
+
+      1. `virtual void setToOriginImpl()`顶点重置函数
+      2. `virtual void oplusImpl(const double *update)`顶点更新函数，主要用于在使用增量方程计算出增量 Δ x 后，用来更新x (k+1) = x(k) + Δ x; 
+      3. `virtual bool read(istream &in) {}`存盘（留空）
+      4. `virtual bool write(ostream &out) const {}`读盘（留空）
+
+   2. 定义边的类型(继承于g2o::BaseUnaryEdge)（一元边：BaseUnaryEdge,二元边：BaseBinaryEdge,多元边：BaseMultiEdge）
+
+      Eigen字对齐
+
+      构造函数（继承）
+
+      重写四个虚函数：
+
+      1. `virtual void computeError()`计算曲线误差函数
+      2. `virtual void linearizeOplus()`计算雅克比矩阵
+      3. `virtual bool read(istream &in) {}`存盘（留空）
+      4. `virtual bool write(ostream &out) const {}`读盘（留空）
+
+   3. 往图中增加顶点
+
+      1. 利用类指针实例化对象
+      2. 设置优化变量`setEstimate`
+      3. 设置顶点编号`setId`
+      4. 向SparseOptimizer中添加顶点
+
+   4. 添加边（x个数据对应for循环次数为x）
+
+      1. 利用类指针实例化对象
+      2. 定义边的编号`setId`
+      3. 设置连接的顶点`setVertex`
+      4. 设置观测数值`setMeasurement`
+      5. 设置信息矩阵（协方差矩阵之逆）`setInformation`
+      6. 向SparseOptimizer中添加边
+
+6. 设置优化参数，开始执行优化
+
+   1. 设置初始值`initializeOptimization`
+   2. 设置求解器`Algorithm`
+   3. 设置迭代次数`optimize`
+   4. 输出优化值
+
+###### 注解
+
+* 函数传递参数时尽量使用引用
+* for循环尽量使用++i，减少内存使用
+* 虚函数实现时可在()后面加上`override`
+
+###### 遗留问题
+
+* `pos_pixel.head<2>()`的作用
+* `setInformation(Eigen::Matrix2d::Identity())`协方差矩阵之逆应该如何选取
