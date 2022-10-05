@@ -20,7 +20,7 @@
 
 
 
-系统文档内的操作
+vim操作
 
 * `:wq`：保存退出
 * `dd`：删除所在行
@@ -102,11 +102,17 @@
 * 声明版本：`cmake_minimum_required( VERSION 2.8 )`
 * 声明工程名：`project( xxx )`
 * 添加外部头文件：`include_directories( "/usr/local/include/eigen3" )`
-
 * 添加可执行程序：`add_execubale(文件名 源代码文件)`
 * 添加库文件：`add_library(库名 库文件)`
 * 添加共享库文件：`add_library(库名 SHARED 库文件)`
 * 添加注释：`#`
+
+注：SLAM工程中经常修改的地方
+
+* OpenCV的版本为3
+* "/usr/include/eigen3"改为"/usr/local/include/eigen3"
+* 绝对路径改为相对路径
+* `target_link_libraries()`括号最后加上fmt
 
 
 
@@ -170,6 +176,15 @@ string name ;int id ;
 
 利用定义的变量遍历数组或者容器其的每一个值
 
+* 定义：`for(declaration : expression) statement`
+
+  * expression:必须是一个序列，即初始值列表、数组、或容器，这些类型都拥有能返回迭代器的begin和end成员
+
+  * declatation:定义一个变量，序列的每个元素都得能转换成该变量的类型，通常用**auto**作为其类型，需要修改序列的内容则加上**引用&**
+  * statement:执行语句
+
+* 用例
+
 ```C++
 vector<int> vec;
  
@@ -185,8 +200,6 @@ for (auto i : vec)
 }
 ```
 
-
-
 如果要**修改**vec的内容：
 
 ```C++
@@ -196,7 +209,7 @@ for (auto& i : vec)
 }
 ```
 
-使用**&**符号后表示它被声明为**引用变量**，成为了**元素本身**的别名，因此可以修改
+使用**&**符号后表示它被声明为**引用变量**，成为了**元素本身**的别名而不是元素的副本，因此可以修改
 
 
 
@@ -240,9 +253,26 @@ for (auto& i : vec)
     sort(word.begin(),word.end(),[] (const string &a,const string &b) {return a.size() < b.size()})
     ```
 
-    
 
 
+
+### 数据类型
+
+#### size_t
+
+在32位系统上定义为unsigned int，在64位系统上定义为unsigned long
+
+
+
+### 内联函数inline
+
+#### 定义
+
+在c/c++中，为了解决一些**频繁调用的小函数**大量消耗栈空间（**栈内存**）的问题，特别的引入了inline修饰符，表示为内联函数（相当于把函数调用部分直接换成函数体）
+
+#### 使用限制
+
+inline只适合函数体内部代码简单的函数使用，函数体内**不能有循环**，**要在调用和声明前定义**
 
 
 
@@ -432,7 +462,7 @@ cout << "solve time cost = " << time_used.count() << "seconds. " << endl;
 
 
 
-### 曲线拟合问题（Ceres库和g2o库）
+### 曲线拟合问题（手写高斯牛顿法、Ceres库和g2o库）
 
 #### P134 手写高斯牛顿法
 
@@ -486,7 +516,8 @@ struct CostFunctor {
 };
 
 //主函数
-int main(int argc, char** argv) {
+int main(int argc, char** argv) 
+{
     google::InitGoogleLogging(argv[0]);
 
     // 寻优参数x的初始值，为5
@@ -495,7 +526,7 @@ int main(int argc, char** argv) {
 
     // 第二部分：构建寻优问题
     Problem problem;
-    CostFunction* cost_function = new AutoDiffCostFunction<CostFunctor, 1, 1>(new CostFunctor); //使用自动求导，将之前的代价函数结构体传入，第一个1是输出维度，即残差的维度，第二个1是输入维度，即待寻优参数x的维度。
+    CostFunction* cost_function = new AutoDiffCostFunction<CostFunctor, 1, 1>(new CostFunctor); //使用自动求导，将之前的代价函数结构体传入，第一个1是输出维度，即残差的维度，第二个1是输入维度，即待寻优参数x的维度，用代价函数结构体初始化。
     problem.AddResidualBlock(cost_function, NULL, &x); //向问题中添加误差项，本问题比较简单，添加一个就行。
 
     //第三部分： 配置并运行求解器
@@ -666,7 +697,7 @@ https://blog.csdn.net/qq_41451702/article/details/122990734?spm=1001.2014.3001.5
 #### 详解代码步骤
 
 1. 读取图像(imread)
-2. 初始化关键点(KeyPoint)，描述子(descriptors)，特征点检测器(FeatureDetector)，描述子提取器(DescriptorExtractor)，描述子匹配器(DescriptorMatcher)
+2. 初始化关键点(KeyPoint)，描述子(descriptors)，特征点检测器(FeatureDetector)，描述子提取器(DescriptorExtractor)，描述子匹配器(DescriptorMatcher)--BruteForce-Hamming
 3. 检测Oriented FAST角点位置(detect)
 4. 计算BRIEF描述子(compute)
 5. 输出含角点图像
@@ -862,8 +893,180 @@ https://blog.csdn.net/qq_41451702/article/details/122990734?spm=1001.2014.3001.5
 * 函数传递参数时尽量使用引用
 * for循环尽量使用++i，减少内存使用
 * 虚函数实现时可在()后面加上`override`
+* `typedef vector<Eigen::Vector2d, Eigen::aligned_allocator<Eigen::Vector2d>> VecVector2d;`创建一个元素为Vector2d的容器
+* `ushort d = img_d.ptr<unsigned short>(int(keypoint_1[m.queryIdx].pt.y))[(int(keypoint_1[m.queryIdx].pt.x))];`**深度图像**的每一个像素值表示相机与物体的距离，这个距离通常以**毫米**为单位
+* `pos_pixel.head<2>()`的作用:提取前两维的值
+* `setInformation(Eigen::Matrix2d::Identity())`若待优化变量服从高斯分布则去协方差矩阵之逆，若不服从高斯分布则取待优化变量矩阵的单位阵
 
 ###### 遗留问题
 
-* `pos_pixel.head<2>()`的作用
-* `setInformation(Eigen::Matrix2d::Identity())`协方差矩阵之逆应该如何选取
+* `d/5000.0`怎么理解
+* `typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType;    `为什么尖括号里面是PoseMatrixType
+
+
+
+### 3D-3D ICP问题求解
+
+#### 详解代码步骤
+
+1. 分别求质心p1,p2
+2. 分别求去质心坐标q1,q2
+3. 求矩阵W = q1 * q2^T
+4. 对W进行SVD分解求出U和V（使用JacobiSVD函数）
+
+#### 注解
+
+* `JacobiSVD<Eigen::Matrix3d> svd(W,ComputerFullU | ComputerFullV)`
+
+  参数一为进行计算的矩阵，参数二有四个取值：
+
+  `ComputeFullU`:在Jacobisvd中用于表示要计算方阵U,用svd.matrixU()取出
+
+  `ComputeFullV`:在Jacobisvd中用于表示要计算方阵V,用svd.matrixV()取出
+
+* `_jacobianOplusXi.block<3,3>(0,0) = -Eigen::Matrix3d::Identity();`
+
+  `_jacobianOplusXi.block<3, 3>(0, 3) = Sophus::SO3d::hat(xyz_trans);`
+
+  <>内为指定雅克比矩阵的块矩阵的大小；()内表示插入的位置，从0开始
+
+* keypoints包含了特征点的二维坐标信息，若为深度图像则可通过二维坐标
+
+* 类型转换：
+
+  * Mat类型转换为Eigen类型
+
+  ```C++
+  Mat K = (Mat_<double>(3, 3) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1);
+  Eigen::Matrix3d K_eigen;
+  K_eigen<<K.at<double>(0,0),K.at<double>(0,1),K.at<double>(0,2),
+           K.at<double>(1,0),K.at<double>(1,1),K.at<double>(1,2),
+           K.at<double>(2,0),K.at<double>(2,1),K.at<double>(2,2);
+  ```
+
+  * Eigen类型转换为Mat类型
+
+  ```C++
+  Eigen::Matrix3d R ;
+  Mat R_mat;
+  R_mat = (Mat_<double>(3,3)<<
+           R(0,0), R(0,1), R(0,2), 
+           R(1,0), R(1,1), R(1,2), 
+           R(2,0), R(2,1), R(2,2) );
+  ```
+
+
+
+### LK光流的使用
+
+#### OpenCV光流
+
+###### 详解代码步骤
+
+1. 提取GFTT关键点
+2. 存入关键点坐标
+3. 调用`cv::calcOpticalFlowPyrLK()`函数
+4. 画出带光流的图像
+   1. 颜色转换`cv::cvtColor`：灰度->BGR
+   2. 调用`cv::circle`和`cv::line`函数标点
+5. 显示图像`cv::imshow()`和`cv::waitKey()`
+
+###### 注解
+
+* `cv::Ptr<cv::GFTTDetector> create( int maxCorners=1000, 
+                                  double qualityLevel=0.01,
+                                  double minDistance=1, 
+                                  int blockSize=3, 
+                                  bool useHarrisDetector=false, 
+                                  double k=0.04 );`
+
+  * maxCorners：检测到的**最大角点数量**；
+
+  * qualityLevel：输出角点的质量等级，取值范围是 [ 0 , 1 ]；如果某个候选点的角点响应值小于（qualityLeve * 最大角点响应值），则该点会被抛弃，相当于判定某候选点为角点的**阈值**；
+
+  * minDistance：两个角点间的**最小距离**，如果某两个角点间的距离小于minDistance，则会被认为是同一个角点；
+
+  * mask：如果有该掩膜，则只计算掩膜内的角点；
+
+  （一般只用设置前三个参数）
+
+  * blockSize：计算角点响应值的邻域大小，默认值为3；如果输入图像的分辨率比较大，可以选择比较大的blockSize；
+
+  * useHarrisDector：布尔类型，如果为true则使用Harris角点检测；默认为false，使用shi-tomas角点检测算法；
+
+  * k：只在使用Harris角点检测时才生效，也就是计算角点响应值时的系数k。
+
+* `cv::calcOpticalFlowPyrLK(img1, img2, pt1, pt2, status, error)`
+
+  * pt1:第一个图像的关键点坐标
+
+  * status:输出**状态向量**（uchar类型），如果找到相应特征的流，则向量的每个元素设置为1，否则设置为0
+
+  * error:输出每个点的**匹配误差**（float类型）
+
+* `void circle(img,center,radius,color,thickness,lineType,shift)`
+  * color通常用`cv::Scalar(B,G,R)`函数表示，每个通道取值0~255，例如绿色为cv::Scalar(0,255,0);
+  * thickness:圆线条的粗细
+  * 后面两个为默认值，`line()`函数调参类似
+  
+* `cv::cvtColor(img2,img2_single,CV_GRAY2BGR)`图像颜色转换函数
+  
+  * img2:输入图像
+  * img2_single:输出图像
+  * CV_GRAY2BGR:转换的标识，表示从灰度空间转换到BGR颜色空间
+
+
+
+#### 高斯牛顿法实现光流
+
+###### 详解代码步骤
+
+被**双线性插值法**和**`parallel_for_**函数卡住了
+
+###### 注解
+
+* `resize(size,0)`分配容器内存大小，第二个参数为初始值，`reserve()`设置容器容量大小，初始值为随机数
+* cv::Range类用于表示**矩阵的多个连续行或列**，范围从start到end，包括start但不包括end
+* `floor()`函数：返回一个小于传入参数的最大整数
+* `parallel_for_(Range(0,kp1.size()),
+                std::bind::(&OpticalflowTracker::calculateOpticalFlow,&tracker,placeholders::_1));`
+  * Range表示范围，即并行计算哪些需要追踪的点
+  * bind是一个绑定函数，表示调用OpticalFlowTracker中的calculateOpticalFlow()，即计算光流
+  * std::placeholders::_1是占位符，表示传入的参数是tracker.calculateOpticalFlow()的第一个参数
+
+
+
+### 直接法
+
+该部分介绍少，算法难，暂时**跳过**
+
+
+
+### 用Ceres解决BA问题
+
+#### 详解代码步骤
+
+1. 传入BAL数据集
+2. 设置参数块、代价函数（误差项）、损失函数（HuberLoss）、预测值（公式）
+3. 配置求解器
+
+#### 注解
+
+* Pc->归一化坐标时要乘以-1
+
+#### 遗留问题
+
+* `double *camera = cameras + camera_block_size * bal_problem.camera_index()[i];`怎么理解
+
+
+
+### 用g2o解决BA问题
+
+#### 详解代码步骤
+
+
+
+#### 注解
+
+### 
+
