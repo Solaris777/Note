@@ -66,7 +66,7 @@ vim操作
 
 
 
-### 使用git流程
+#### 使用git流程
 
 * 在github中创建一个新的仓库
 * 在需要上传文件的文件夹中初始化仓库，选择Git Bash Here
@@ -275,6 +275,109 @@ for (auto& i : vec)
 inline只适合函数体内部代码简单的函数使用，函数体内**不能有循环**，**要在调用和声明前定义**
 
 
+
+### 关键字
+
+#### explicit关键字
+
+###### 作用
+
+explicit关键字只能用于修饰**只有一个参数**的类**构造函数**，它的作用是表明该构造函数是**显示**的，而非隐式的。类构造函数默认情况下即声明为implicit（隐式）
+
+###### 例子
+
+```C++
+class CxString  // 没有使用explicit关键字的类声明, 即默认为隐式声明  
+{  
+public:  
+    char *_pstr;  
+    int _size;  
+    CxString(int size)  
+    {  
+        _size = size;                // string的预设大小  
+        _pstr = malloc(size + 1);    // 分配string的内存  
+        memset(_pstr, 0, size + 1);  
+    }
+};
+
+    // 下面是调用:  
+  
+    CxString string1(24);     // 这样是OK的, 为CxString预分配24字节的大小的内存  
+    CxString string2 = 10;    // 这样是OK的, 为CxString预分配10字节的大小的内存  
+
+//加了explicit关键字后第二条调用无效
+```
+
+
+
+#### static关键字
+
+###### 作用
+
+1. 修饰**全局变量**时，表明该全局变量只对定义在**同一文件中**的函数可见
+2. 修饰**局部变量**时，表明该变量的值**不会因为函数终止而丢失**
+3. 修饰**函数**时，表明该函数**只在同一文件中调用**
+4. 修饰**类的数据成员**时，表明对该类所有对象，这个数据成员都**只有一个实例**。即该实例归所有对象共有
+5. 修饰**类的成员函数**，静态成员函数不能引用非静态成员，非静态成员函数可以引用静态成员变量（被static修饰的东西在程序一开始就分配空间了）
+6. 详细见https://blog.csdn.net/zhizhengguan/article/details/81183602
+
+
+
+#### const关键字
+
+###### 作用
+
+1. 修饰**局部变量**，表明该变量不能再被修改，定义时必须初始化
+2. **常量指针（底层const）**：`const int *n或int const *n`即指针指向的**内容**是常量
+   * 不能通过指针改变变量的值，但是还是可以通过其他的**引用**改变变量的值
+   * 指针指向的值不能改变，但是指针本身可以**指向其他的地址**
+3. **指针常量（顶层const）**：`int *const n;`即指针**本身**是个常量，不能再指向其他的地址
+   * 指针常量指向的地址不能改变，但是地址中保存的**数值是可以改变的**，可以通过其他指向该地址的指针来修改
+   * 区分常量指针和指针常量：看const**在谁的右边**，**谁就是不能改变的**。例如`int *const a`const在*的右边，所以指针（本身）是不能改变的；`const int *a`等价于`int const *a`const在int的右边，所以指针指向的值是不能改变的
+4. **指向常量的常指针**：`const int* const p;`即指针指向的位置不能改变并且也不能通过这个指针改变变量的值，但是依然可以通过其他的指针改变变量的值
+5. 修饰**全局变量**：全局变量都尽量使用const进行修饰，因为一旦有一个函数改变了全局变量的值，它也会影响到其他引用这个变量的函数，导致除了bug后很难发现
+6. 修饰**成员变量**：不能在类定义外部初始化，只能通过构造函数**初始化列表**进行初始化，并且必须有构造函数。（不同类对其const数据成员的值可以不同，所以不能在类中声明时初始化）
+7. 修饰**成员函数**：const对象不能调用非const成员函数；非const对象都可以调用
+
+注：
+
+* 执行对象拷贝时有限制，常量的底层const不能赋值给非常量的底层const
+* 使用命名的强制类型转换函数const_cast时，只能改变运算对象的底层const
+
+
+
+### 文本文件操作
+
+#### 操作文件三大类
+
+* ofstream：写操作
+* ifstream：读操作
+* fstream：读写操作
+
+#### 文件打开方式
+
+* `ios::in`为读文件而打开文件
+* `ios::out`为写文件而打开文件
+* `ios::ate`初始位置：文件尾
+* `ios::app`追加方式写文件
+* `ios::trunc`如果文件存在先删除，再创建
+
+#### 写文件
+
+1. 包含头文件`#include<fstream>`
+2. 创建流对象`ofstream ofs;`
+3. 打开文件`ofs.open("文件路径",打开方式)`
+4. 写入数据`ofs<<"写入的数据"`
+5. 关闭文件`ofs.close();`
+
+#### 读文件
+
+1. 包含头文件`#include<fstream>`
+2. 创建流对象`ifstream ifs;`
+3. 打开文件`ifstream fin(argv[1])`
+4. 判断是否打开成功`if(!fin)`
+5. 读取文件`while(!fin.eof()) {fin >> name}` （遇到空格停止）
+6. 关闭文件`ifs.closea();`
 
 ## 十四讲代码理解
 
@@ -1053,20 +1156,95 @@ https://blog.csdn.net/qq_41451702/article/details/122990734?spm=1001.2014.3001.5
 #### 注解
 
 * Pc->归一化坐标时要乘以-1
-
-#### 遗留问题
-
-* `double *camera = cameras + camera_block_size * bal_problem.camera_index()[i];`怎么理解
+* `double *camera = cameras + camera_block_size * bal_problem.camera_index()[i];`即用指针进行逐个存入数据的操作，camera_block_size为参数块的大小，bal_problem.camera_index()[i]为当前指针的位置
 
 
 
 ### 用g2o解决BA问题
 
+全局优化：两个顶点分别为**相机位姿**和**路标点**，单元边为误差函数
+
 #### 详解代码步骤
 
-
+1. 读取BAL数据集并初始化，写入.ply文件
+   1. `Normalize()`：归一化
+   2. `Perturb(0.1,0.5,0.5)`设置参数
+2. 编写SolveBA()
+   1. 创建姿态和内参（焦距、畸变参数）结构体以及写入函数
+   2. 再用g2o
+   3. 将BA优化后的数据写入
+3. 再次写入第二个.ply文件
 
 #### 注解
 
-### 
+* `g2o::BaseBinaryEdge<int D,typename E,typename VertexXi,typename VertexXj>`继承**二元边**，模板参数分别为二元边维度、二元边类型、连接第一个顶点的类型、连接第二个顶点的类型
+* 手动设置边缘化顶点`v.setMarginalized(true)`
+* `e->setVertex(0,vertex_camera[bal_Problem.camera_index()[i]]);`把第i个相机的顶点参数传入
+* `auto v0 = (VertexCamera* )_vertices[0]`强制转换为顶点类型
+* `setMarginalized(true)`手动设置边缘化顶点
+* `e->setInformation(Matrix2d::Identity())`注意是协方差**矩阵**之逆，不能用Vector2d
+* 未编写`linearizeOplus`的原因：让g2o自动计算数值雅克比
 
+
+
+### 位姿图优化
+
+#### g2o原生位姿图
+
+###### 详解代码步骤
+
+1. 用ifstream读取.g2o文件
+2. 设定g2o的BlockSolver,LinearSolver,solver,optimizer类型
+3. 进行逐个字符判断，存入顶点、边的信息
+4. 启动求解器
+
+###### 注解
+
+* g2o默认的顶点`g2o::VertexSE3`，默认的边`g2o::EdgeSE3`
+
+* `v->read(fin)`相当于`v->setEstimate()`，将fin里的信息传入顶点
+
+
+
+#### 李代数上的位姿图优化
+
+暂时跳过
+
+
+
+### 词袋模型
+
+#### 创建字典
+
+###### 详解代码步骤
+
+1. 存入一组图片
+2. 提取特征点并计算描述子
+3. 定义字典`DBow3::Vocabulary vocabulary`
+4. 字典初始化`vocabulary.create(descriptors)`
+5. 保存`vocabulary.save(xxx.yml.gz)`
+
+###### 注解
+
+* `to_string(int val)`函数：将数值转化为字符串，返回对应的字符串
+
+* `detectAndCompute(image,Mat(),keypoints,descriptor)`参数分别为图像、掩膜、关键点、描述子（掩膜通常为Mat()）
+
+
+
+#### 相似度计算
+
+###### 直接比较图像
+
+1. 创建字典
+2. 创建词袋变量`DBow3::BowVector v1`
+3. 计算词袋变量`vocabulary.transform(descriptors[i],v1)`
+4. 相似度计算`double score = vocabulary.score(v1,v2)`
+
+###### 比较图像与数据库
+
+1. 创建字典
+2. 创建数据库`DBow3::Database db(vocabulary,false,0)`
+3. 添加描述子`db.add(descriptors[i])`
+4. 定义相似度`DBow3::QueryResults ret`
+5. 相似度计算`db.query(descriptors[i],ret,4)`，其中4代表max_result，即相似度最高的四个结果
