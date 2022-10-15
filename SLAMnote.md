@@ -37,7 +37,7 @@ vim操作
 
 
 
-### **git命令行**
+## **git仓库操作**
 
 * `git init`：初始化仓库*
 
@@ -113,6 +113,7 @@ vim操作
 * "/usr/include/eigen3"改为"/usr/local/include/eigen3"
 * 绝对路径改为相对路径
 * `target_link_libraries()`括号最后加上fmt
+* `set(CMAKE_CXX_FLAGS "-std=c++11 -O2")`改为`set(CMAKE_CXX_STANDARD 14)`
 
 
 
@@ -379,6 +380,37 @@ public:
 5. 读取文件`while(!fin.eof()) {fin >> name}` （遇到空格停止）
 6. 关闭文件`ifs.closea();`
 
+
+
+### boost::format的使用
+
+#### 直接输出
+
+类似于printf，它的直接输出格式为`	std::cout << ( boost::format("%s") % "Hello boost!") << std::endl;`，即%后面接字符内容
+
+#### 与string结合使用
+
+```C++
+	string s1;
+	boost::format fmt("%s");
+	fmt % "Hello boost!!";
+	s1 = fmt.str();
+	std::cout << s1 << std::endl;
+```
+
+只需加上`str()`函数将boost::format类型转换为string类型
+
+#### 占位符格式
+
+```C++
+ std::cout << (boost::format("%1% %2%") % "Hello" % "boost!!!") << std::endl;  // "Hello"对应占位符%1%，"boost!!!"对应占位符%2%
+
+std::cout << (boost::format("%2% %1% %3%") % "Hello" % "boost" % "!!!") << std::endl;  // "Hello"对应占位符%1%，"boost"对应占位符%2%  "!!!"对应占位符 %3%
+//输出boost Hello !!!
+```
+
+
+
 ## 十四讲代码理解
 
 ### 三维刚体运动（eigen库、pangolin库）
@@ -405,11 +437,9 @@ public:
 
 * 对于**Vector**,norm返回的是向量的**二范数**
 
-![image-20220718000919251](D:/Typora图像/image-20220718000919251.png)
-
 * 对于**Matrix**,norm返回的是矩阵的**佛罗贝尼乌斯范数**
 
-![image-20220718000936091](D:/Typora图像/image-20220718000936091.png)
+
 
 ##### normalize函数
 
@@ -1141,6 +1171,8 @@ https://blog.csdn.net/qq_41451702/article/details/122990734?spm=1001.2014.3001.5
 
 ### 直接法
 
+双线性插值法(BilinearInterpolatedValue)
+
 该部分介绍少，算法难，暂时**跳过**
 
 
@@ -1183,7 +1215,6 @@ https://blog.csdn.net/qq_41451702/article/details/122990734?spm=1001.2014.3001.5
 * `auto v0 = (VertexCamera* )_vertices[0]`强制转换为顶点类型
 * `setMarginalized(true)`手动设置边缘化顶点
 * `e->setInformation(Matrix2d::Identity())`注意是协方差**矩阵**之逆，不能用Vector2d
-* 未编写`linearizeOplus`的原因：让g2o自动计算数值雅克比
 
 
 
@@ -1201,8 +1232,8 @@ https://blog.csdn.net/qq_41451702/article/details/122990734?spm=1001.2014.3001.5
 ###### 注解
 
 * g2o默认的顶点`g2o::VertexSE3`，默认的边`g2o::EdgeSE3`
-
 * `v->read(fin)`相当于`v->setEstimate()`，将fin里的信息传入顶点
+* 打开方式`g2o_viewer result.g2o`
 
 
 
@@ -1218,11 +1249,13 @@ https://blog.csdn.net/qq_41451702/article/details/122990734?spm=1001.2014.3001.5
 
 ###### 详解代码步骤
 
-1. 存入一组图片
+1. 存入一组图像
 2. 提取特征点并计算描述子
 3. 定义字典`DBow3::Vocabulary vocabulary`
 4. 字典初始化`vocabulary.create(descriptors)`
 5. 保存`vocabulary.save(xxx.yml.gz)`
+
+
 
 ###### 注解
 
@@ -1237,8 +1270,8 @@ https://blog.csdn.net/qq_41451702/article/details/122990734?spm=1001.2014.3001.5
 ###### 直接比较图像
 
 1. 创建字典
-2. 创建词袋变量`DBow3::BowVector v1`
-3. 计算词袋变量`vocabulary.transform(descriptors[i],v1)`
+2. 创建词袋向量`DBow3::BowVector v1`
+3. 计算词袋向量`vocabulary.transform(descriptors[i],v1)`
 4. 相似度计算`double score = vocabulary.score(v1,v2)`
 
 ###### 比较图像与数据库
@@ -1248,3 +1281,134 @@ https://blog.csdn.net/qq_41451702/article/details/122990734?spm=1001.2014.3001.5
 3. 添加描述子`db.add(descriptors[i])`
 4. 定义相似度`DBow3::QueryResults ret`
 5. 相似度计算`db.query(descriptors[i],ret,4)`，其中4代表max_result，即相似度最高的四个结果
+
+###### 增加字典规模
+
+类似创建字典
+
+
+
+### 建图
+
+#### 单目稠密重建
+
+###### 详解代码步骤
+
+1. 读取图像以及相机外参（读文件流操作）
+
+2. 选取第一张图像作为参考图像（ref）
+
+3. 遍历后面每个图像，进行对极匹配
+
+   1. 参考帧向量（参考帧三维坐标） = 归一化坐标 * 深度值
+   2. 以深度均值投影的像素为中心，3σ为半径，取最大/最小深度投影的像素
+   3. 极线 = 最大深度投影像素 - 最小深度投影像素
+   4. 在极线上以深度均值点为中心，左右各取半极线长度进行搜索，计算NCC，只有当NCC>=0.85时才认为深度均值点像素 = 参考点像素
+
+4. 更新图像
+
+   1. 用三角化计算深度 
+
+      1. 像素坐标->三维坐标，并进行归一化
+
+      2. 分别设归一化后的坐标为x1，x2，则根据方程
+         $$
+         d_1x_1 = d_2(Rx_2) + t
+         $$
+         左右两边分别乘以x1，Rx2得
+         $$
+         \left[\begin{matrix}
+         x_1x_1 & -Rx_2x_1\\
+         x_1Rx_2 & -Rx_2Rx_2
+         \end{matrix}\right]
+         \left[\begin{matrix}
+         d_1\\
+         d_2
+         \end{matrix}\right]
+         =
+         \left[\begin{matrix}
+         tx_1\\
+         tRx_2
+         \end{matrix}\right]
+         $$
+         求解方程组解得d1，d2
+         $$
+         p' = \frac{d_1x_1+d_2Rx_2+t}{2}
+         $$
+         深度值depth = p'.norm();
+
+         参考帧三维坐标 = 归一化坐标 * 深度值
+
+   2. 计算不确定性（见P313）
+
+   3. 高斯融合（将计算出来的μ和σ赋值给深度图中的像素点）
+
+5. 计算误差并保存深度图像
+
+###### 注解
+
+* 位姿文件表示的是**Twc**，即相机坐标系->世界坐标系，其中的参数分别为tx, ty, tz, qx, qy, qz, qw
+* 对一个向量进行`Eigen::normalize()`运算，得出该向量的归一化向量（即 **方向**）
+* 有两种归一化：
+  1. 将三维空间点投影到归一化平面上
+  2. 将一个坐标除以自身的二范数（上面的归一化，便于计算）
+
+###### 遗留问题
+
+* 为什么`acos(f_ref.dot(t) / t_norm);`用f_ref而不是用p
+
+#### RGBD稠密地图重建
+
+###### 详解代码步骤
+
+1. 载入色彩图和深度图，载入位姿文件并转换成矩阵形式
+2. 定义点以及点云图的格式，并创建对象
+3. 像素坐标->世界坐标，坐标+RGB=点
+4. 使用统计滤波器去除孤立点
+5. 使用体素滤波器进行降采样
+6. 保存为.pcd文件`pcl::io::savePCDFileBinary("文件名",点云图)`
+
+###### 注解
+
+* `filter()`函数报错：把C++11改成C++14 or 共享库加上fmt后缀
+
+* 打开方式`pcl_viewer map.pcd`
+
+* 位姿文件（平移向量 四元数） -> 4x4变换矩阵T
+
+  其中四元数先转换成旋转矩阵R，然后构成
+  $$
+  T=
+  \left[\begin{matrix}
+  R & t\\
+  0^T & 1
+  \end{matrix}\right]
+  $$
+  其中R大小为3x3，t大小为1x3
+
+###### 遗留问题
+
+* 为什么`point[2] = double(d) / depthScale;`
+
+#### 点云转化网格图
+
+一堆函数调用+`terminate called after throwing an instance of 'std::logic_error'
+  what():  basic_string::_M_construct null not valid`报错
+
+#### 八叉树地图(octomap)
+
+###### 详解代码步骤
+
+1. 载入色彩图和深度图，载入位姿文件并转换成变换矩阵形式
+2. 设置分辨率为0.01`octomap::OcTree tree(0..01)`
+3. 将像素坐标转换为世界坐标，并存入点云`octomap::Pointcloud`
+4. 将点云存入八叉树地图`tree.insertPointCloud(cloud,t)`参数分别为点云，原点（设为平移向量）
+5. 更新中间节点的**占据信息**并写入磁盘`tree.updateInnerOccupancy()`+`tree.writeBinary(文件名.bt)`
+
+###### 注解
+
+* 代码中的`vector<Eigen::Isometry3d> poses`要改为`vector<Eigen::Isometry3d,Eigen::aligned_allocator<Eigen::Isometry3d>> poses`
+
+
+
+### 设计SLAM系统
