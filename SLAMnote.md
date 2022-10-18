@@ -117,6 +117,111 @@ vim操作
 
 
 
+## C语言多线程处理
+
+#### 创建子线程
+
+线程变量类型`pthread_t th`
+
+创建线程`pthread_create(&th,NULL,myfunc,NULL)`
+
+`myfunc`为特定函数，格式为
+
+```C++
+void* myfunc(void* args)
+{
+  //子线程需要运行的内容
+  return NULL;
+}
+```
+
+### 总线程与子线程冲突
+
+考虑到总线程会在子线程还没执行完之前结束，加入等待函数`pthread_join(th,NULL)`
+
+子线程并不是同时运行的
+
+输出线程名称`pthread_create(&th1,NULL,myfunc,"th1")`，此时的th1会传入到args中，若在函数输出，则需做一次强制类型转换
+
+#### 锁（子线程与子线程冲突）
+
+为解决子线程做先后任务但是交错运行的情况（race condition），引入锁的概念
+
+谁先用锁，谁先执行，，未执行的线程等待有锁的线程解锁后执行，锁是被共用的
+
+定义一个mutex类型的锁`pthread_mutex_t lock`
+
+锁的初始化`pthread_mutex_init(&lock,NULL)`
+
+锁的位置关系到程序的效率（尽量不要放在循环内）
+
+使用锁
+
+```C++
+pthread_mutex_lock(&lock);    //上锁
+//执行代码
+pthread_mutex_unlock(&lock);    //解锁
+```
+
+
+
+## C++多线程处理
+
+### 并发与并行的区别
+
+#### **并发**
+
+当有多个线程在操作时,如果系统只有一个CPU,则它根本不可能真正同时进行一个以上的线程,它只能把CPU运行时间划分成若干个时间段,再将时间段分配给各个线程执行,在一个时间段的线程代码运行时,其它线程处于挂起状态.这种方式我们称之为并发(Concurrent)
+
+
+
+#### **并行**
+
+当系统有一个以上CPU时,则线程的操作有可能非并发.当一个CPU执行一个线程时,另一个CPU可以执行另一个线程,两个线程互不抢占CPU资源,可以同时进行,这种方式我们称之为并行(Parallel)
+
+
+
+![这里写图片描述](20160522231547771.gif)
+
+
+
+#### **区别**
+
+并行在多处理器系统中存在，而并发可以在单处理器和多处理器系统中都存在，并发能够在单处理器系统中存在是因为并发是并行的假象，并行要求程序能够同时执行多个操作，而并发只是要求程序假装同时执行多个操作（每个小时间片执行一个操作，多个操作快速切换执行）
+
+
+
+### 进程与线程的区别
+
+#### 进程
+
+正在运行的程序的实例
+
+
+
+#### 线程
+
+进程中实际运作单位
+
+
+
+![进程与线程的区别](watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3NqY18wOTEw,size_16,color_FFFFFF,t_70.png)
+
+
+
+#### 区别
+
+- 一个程序有且只有一个进程，但可以拥有至少一个的线程。
+- 不同进程拥有不同的地址空间，互不相关，而不同线程共同拥有相同进程的地址空间。
+
+
+
+### std::thread
+
+
+
+
+
 ## C++相关知识
 
 ### main函数
@@ -408,6 +513,114 @@ public:
 std::cout << (boost::format("%2% %1% %3%") % "Hello" % "boost" % "!!!") << std::endl;  // "Hello"对应占位符%1%，"boost"对应占位符%2%  "!!!"对应占位符 %3%
 //输出boost Hello !!!
 ```
+
+
+
+### 智能指针
+
+#### shared_ptr智能指针
+
+多个shared_ptr智能指针可以**共同使用**同一块堆内存
+
+###### 初始化
+
+* 创建一个空指针：`shared_ptr<string> p1;`
+* 指向一个值为42的int的shared_ptr：`shared_ptr<int> p2 = make_shared<int>(42);`
+* 用new返回的指针来初始化智能指针：`shared_ptr<int> p3(new int(1024));`，而不是`shared_ptr<int> p3 = new int (1024)`（因为接受指针参数的智能指针构造函数时explicit的）
+
+
+
+###### 拷贝与赋值
+
+每个shared_ptr智能指针都有一个关联的计数器，即**引用计数**；
+
+当我们**拷贝**一个shared_ptr，计数器都会**递增**；
+
+例如：
+
+* 用一个shared_ptr初始化另一个shared_ptr
+* 将它作为参数传递给一个函数
+* 作为函数的返回值
+
+当我们给shared_ptr**赋予一个新值**或是shared_ptr**被销毁**，计数器都会**递减**；
+
+一旦计数器的值变为0，它就会自动释放自己所管理的对象
+
+
+
+###### 成员函数
+
+* `reset()`：当函数没有实参时，该函数会使当前 shared_ptr 所指堆内存的引用计数减 1，同时将当前对象重置为一个空指针；当为函数传递一个新申请的堆内存时，则调用该函数的 shared_ptr 对象会获得该存储空间的所有权，并且引用计数的初始值为 1。
+* `get()`：获得 shared_ptr 对象内部包含的普通指针。
+* `use_count()`：返回同当前 shared_ptr 对象（包括它）指向相同的所有 shared_ptr 对象的数量。
+* `unique()`：判断当前 shared_ptr 对象指向的堆内存，是否不再有其它 shared_ptr 对象再指向它。
+
+
+
+#### unique_ptr智能指针
+
+每个unique_ptr指针都独自拥有对其所指堆内存的**所有权**
+
+###### 初始化
+
+* 创建一个空指针：`unique_ptr<int> p1;`
+* 指向一个值为42的int的unique_ptr：`unique_ptr<int> p2(new int(42));`
+
+
+
+###### 成员函数
+
+* `release()`：放弃对指针的控制权，返回指针，并将原智能指针置空
+* `reset()`：释放指向的对象
+* `reset(q)`：如果提供了内置指针q，则指向这个对象
+* `reset(nullptr)`：将原智能指针置空
+
+
+
+###### 拷贝与赋值
+
+不支持普通拷贝，如`unique_ptr<string> p2(p1);`
+
+也不支持赋值，如`p3 = p2;`
+
+但支持返回unique_ptr，如`return unique_ptr<int>(new int(p));`或
+
+`unique_ptr<int> ret(new int(p));`
+
+`return ret;`
+
+
+
+#### weak_ptr智能指针
+
+shared_ptr指针的一个辅助工具，不会影响所指内存空间的引用计数，也不会修改堆内存
+
+###### 初始化
+
+* 创建一个空指针：`weak_ptr<int> wp1;`
+* 利用shared_ptr为其初始化：`weak_ptr<int> wp2(sp);`
+
+
+
+###### 拷贝与赋值
+
+可以拷贝：`weak_ptr>int> wp2(wp1);`
+
+
+
+###### 成员函数
+
+* `reset()`：将当前 weak_ptr 指针置为空指针
+* `use_count()`：查看指向和当前 weak_ptr 指针相同的 shared_ptr 指针的数量
+* `expired()`：判断当前 weak_ptr 指针为否过期（指针为空，或者指向的堆内存已经被释放）
+* `lock()`：如果当前 weak_ptr 已经过期，则该函数会返回一个空的 shared_ptr 指针；反之，该函数返回一个和当前 weak_ptr 指向相同的 shared_ptr 指针
+
+
+
+###### 作用
+
+* 调用lock函数解决**多线程**同时操作shared_ptr引用计数，导致计数失败或无效等情况
+* 作为类成员解决类**循环引用**导致的内存泄漏问题
 
 
 
