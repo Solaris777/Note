@@ -88,24 +88,79 @@ vim操作
 
 ## CMake编译
 
-### 步骤
+### 同一目录，单个源文件
 
-* 创建CMakeLists.txt，并在里面作声明（源代码文件、库文件等）
-* 创建build文件夹，存放中间文件
-* 在build文件夹中对上层目录进行cmake ..编译，生成MakeFile文件
-* 进行make编译，./执行
+```cmake
+# cmake最低版本号要求
+cmake_minimum_required (VERSION 2.8)
+# 项目名称
+project (Demo1)
+# 指定生成目标
+add_executable(Demo main.cpp)
+```
+
+* 指定生成目标：`add_executable(Demo main.cpp)`
+
+（将名为main.cpp的源文件编译成一个名称为Demo的可执行文件）
 
 
 
-### CmakeLists分文件编程
+### 同一目录，多个源文件
 
-* 声明版本：`cmake_minimum_required( VERSION 2.8 )`
-* 声明工程名：`project( xxx )`
-* 添加外部头文件：`include_directories( "/usr/local/include/eigen3" )`
-* 添加可执行程序：`add_execubale(文件名 源代码文件)`
-* 添加库文件：`add_library(库名 库文件)`
-* 添加共享库文件：`add_library(库名 SHARED 库文件)`
-* 添加注释：`#`
+```CMAKE
+# cmake最低版本号要求
+cmake_minimum_required (VERSION 2.8)
+# 项目名称
+project (Demo2.1)
+# 生成同一执行文件
+add_executable(Demo main.cpp MathFunctions.cpp)
+
+#或者分成两个可执行文件
+add_executable(Demo1 main.cpp)
+add_executable(Demo2 MathFunction.cpp)
+
+#或者直接查询全部源文件
+aux_source_directory(. DIR_SRCS)
+add_executable(Demo ${DIR_SRCS})
+```
+
+* 原型为`aux_source_directory(<dir> <variable>)`，查询当前目录下所有的源文件
+
+
+
+### 多个目录，多个源文件
+
+```cmake
+# 版本信息
+cmake_minimum_required (VERSION 2.8)
+# 项目名称
+project (Demo3)
+# 查找当前目录下的所有源文件
+# 并将名称保存到 DIR_SRCS 变量
+aux_source_directory(. DIR_SRCS)
+# 添加 math 子目录
+add_subdirectory(math)
+# 指定生成目标
+add_executable(Demo main.cc)
+# 添加链接库
+target_link_libraries(Demo MathFunctions)
+```
+
+```cmake
+#math下的CMakeLists.txt
+# 查找当前目录下的所有源文件
+# 并将名称保存到 DIR_LIB_SRCS 变量
+aux_source_directory(. DIR_LIB_SRCS)
+# 生成链接库
+add_library (MathFunctions ${DIR_LIB_SRCS})
+```
+
+
+
+* `add_subdirectory`：指明本项目包含一个子目录 math，这样 math 目录下的 CMakeLists.txt 文件和源代码也会被处理
+* `target_link_libraries`：指明可执行文件 main 需要连接一个名为 MathFunctions 的链接库
+
+
 
 注：SLAM工程中经常修改的地方
 
