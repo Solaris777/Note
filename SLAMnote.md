@@ -271,27 +271,104 @@ pthread_mutex_unlock(&lock);    //解锁
 
 
 
-### Hello Concurrent World
+### 创建和等待多个线程
 
 ```C++
 #include <iostream>
 #include <thread>
 
-void hello()
+void sum(int a,int b)
 {
-    std::cout<<"Hello Concurrent World\n";
+    std::cout << "a + b = " << a+b <<endl;
 }
 
 int main()
 {
-    std::thread t(hello);
+    int a = 1,b = 2;
+    std::thread t(hello,a,b);
     t.join();
 }
 
 ```
 
-* `std::thread t(hello)`：每个线程都需要一个**起始函数（initial function）**，新线程从这个函数开始执行。对于起始线程（initial thread）而言，该函数是main()；对于别的线程，起始函数需要在std::thread对象的构造函数中指明
-* `t.join()`：该调用会令主线程等待子线程
+* `std::thread t(hello,a,b)`
+  * hello：每个线程都需要一个**起始函数（initial function）**，新线程从这个函数开始执行。对于起始线程（initial thread）而言，该函数是main()；对于别的线程，起始函数需要在std::thread对象的构造函数中指明
+  * a,b：创建线程的函数的参数
+* `t.join()`：该调用会令主线程**等待**子线程（汇合）
+* `t.detach()`：该调用会令主线程**不等待**子线程（分离）
+* `t.joinable()`：未进行汇合/分离线程时返回真，表示可以汇合/分离；已进行以上操作则返回假
+* `std::thread::hardware_concurrency()`：返回程序可以调动的最大线程数
+* `t.get_id()`：获得该线程的ID
+* `std::this_thread::get_id()`：获得所在线程ID（常用）
+
+
+
+### 数据共享
+
+```c++
+#include<iostream>
+#include<thread>
+#include<vector>
+#include<list>
+#include<mutex>
+using namespace std;
+class A
+{
+public:
+    //接受消息
+    void setX()
+    {
+        //mymutex.lock();
+        lock_guard<mutex> lg1(mymutex);
+        for (int i = 0; i < 10; ++i)
+        {
+            cout << "setX执行 插入一个元素:  " << i << endl;
+            l1.push_back(i); //假设i为收到的信息
+        }
+        //mymutex.unlock();
+    }
+
+    //取出信息
+    void printX()
+    {
+        //mymutex.lock();
+        lock_guard<mutex> lg2(mymutex);
+        for (int i = 0; i < 10; ++i)
+        {
+            if (!l1.empty())
+            {
+                l1.pop_front();
+            }
+            else
+            {
+                cout << "没有信息" <<i<< endl;
+            }
+        }
+        //mymutex.unlock();
+        cout << "消息处理结束" << endl;
+    }
+private:
+    list<int> l1; //存放信息
+    mutex mymutex; //创建一个互斥量
+};
+int main()
+{
+    A a;
+    thread mySet(&A::setX, &a);
+    thread myPrint(&A::printX, &a);
+    mySet.join();
+    myPrint.join();
+    return 0;
+}
+```
+
+* `mutex m`：创建一个互斥量
+* `m.lock()`：上锁（应该放在循环前，减少代码运行时间）
+* `m.unlock`：解锁
+* `lock_guard<mutex> lg1(mymutex1,mymutex2)`：使用互斥量mymutex1创建一个lock_guard类，其构造函数与析构函数分别为mymutex1.lock()和mymutex1.unlock()；lock_guard的生命周期即所在{}内，也可以单独用{}限定lock_guard的生命周期；第二个参数表示这个互斥量已经lock，无需在构造函数中上锁
+* `unique_lock<mutex> lg2(mymutex1,std::defer_lock)`：类似lock_guard，但可以随时加锁解锁，在需要时锁定；不可复制，可移动
+
+* 以下做法极不可取：**意图在函数中创建线程，并让线程访问函数的局部变量**
 
 
 
@@ -864,6 +941,104 @@ void main()
     ++bk;//right,bk=98
 }
 ```
+
+
+
+### 右值引用与std::move
+
+#### 左值和右值
+
+* **左值**：存储在内存中的，由明确**存储地址**的数据（如变量）
+* **右值**：可以提供数据值的数据（如常量）
+
+
+
+#### 左值引用和右值引用
+
+* **左值引用**：用于表示左值的变量，即一个变量的别名
+
+```c++
+int x = 8;
+int &y = x;
+y = 88;
+int &z = 666;             //错误，因为666是右值
+const int &z = 666;       //正确，此时z为常量左值引用，但不能修改它的值
+```
+
+* **右值引用**：用于表示右值的变量，可以修改这个右值的值，使用两个&&表示
+
+```c++
+int &&z = 666;
+z = 88;                   //正确，右值引用可以修改右值的值
+int x = 888;
+z = x;                    //错误，右值引用不能约束到左值上
+```
+
+
+
+#### std::move
+
+`std::move(T&& t)`函数将括号内的左值**转换**成右值，避免了**内存拷贝**
+
+```c++
+class String
+{
+public:
+    String(const char* buf)
+    {
+    	_buf = new char[strlen(buf) + 1];
+        strcpy(_buf, buf);	// 内存拷贝
+    }
+    
+	String(const String& str)
+    {
+     	_buf = new char[strlen(str._buf) + 1];
+        strcpy(_buf, str._buf);	// 内存拷贝
+    }
+    
+    String(String&& str)
+    {
+        _buf = str._buf;		// 直接使用内存地址
+        str._buf = nullptr;
+    }
+    
+private:
+	char* _buf;	
+}
+
+void main()
+{
+    String str("hello world!");
+    String str1(str);
+    String str2(std::move(str));
+}
+```
+
+* str1对象在构造时调用的是String(const String& str)，这个构造函数内部会创建新的内存地址，然后拷贝str中的数据。
+* move函数将左值str转换成右值，str2对象在构造的时候会调用String(String&& str)，这个构造函数内部直接使用了参数对象中的地址，没有创建新的内存地址，也没有进行内存拷贝。
+
+
+
+#### 右值引用和函数模板
+
+```c++
+template<typename T>
+void foo(T&& t)         
+{}
+```
+
+当传入左值时，理论上右值引用是不可以被绑定到左值上的，但有通用引用可以，它必须满足以下两个条件：
+
+1. **类型推导**区分左右值：`T`类型的左值被推导为`T&`类型，`T`类型的右值被推导为`T`
+2. 发生**引用折叠**（存在连续两种类型的引用）：如果任一引用为左值引用，则结果为左值引用。否则（即，如果引用都是右值引用），结果为右值引用
+
+故传入左值时，推出左值引用，函数正常运行；
+
+传入右值时，推出右值，函数正常运行
+
+（这也是std::move的实现原理）
+
+
 
 
 
