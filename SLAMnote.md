@@ -86,6 +86,127 @@ vim操作
 
 
 
+## C++中的工厂模式
+
+### 简单工厂模式
+
+#### 定义
+
+* 简单工厂模式（Simple Factory Pattern）专门定义**一个类（工厂）来负责创建其他类的实例（具体产品角色），被创建的实例通常具有共同的父类（抽象产品角色）。**
+
+
+
+#### 模式结构
+
+1. Factory工厂角色（工厂类）：
+
+工厂角色即工厂类，是简单工厂模式的核心，负责创建所有实例的内部逻辑，工厂类可以被外界直接调用，创建所需要的产品对象。
+
+2. Product（抽象产品类）：
+
+抽象产品角色是简单工厂模式所创建的所有对象的父类，负责描述所有实例所共有的公告接口。所创建的具体产品对象都是其子类对象。
+
+3. ConcreteProduct（具体产品类）：
+
+具体产品角色是简单工厂模式的创建目标。每个具体产品角色都继承了抽象产品角色，需要实现定义在抽象产品中的方法。
+
+ProductA、ProductB和ProductC继承自Product虚拟类，Show方法是不同产品的自描述；Factory依赖于ProductA、ProductB和ProductC，Factory根据不同的条件创建不同的Product对象
+
+
+
+#### 结构图
+
+![img](https://img-blog.csdnimg.cn/20210816083201361.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2tlbmppYW5xaTE2NDc=,size_16,color_FFFFFF,t_70)
+
+其中Factory为工厂类，Product为抽象产品角色，ProductA、ProductB等为具体产品角色
+
+
+
+#### 优缺点
+
+* 优点：
+
+  本着高内聚低耦合的原则，将系统的逻辑部分和功能分开。
+
+* 缺点：
+
+  简单工厂模式会增加系统类的个数，在一定程度上增加了系统的复杂度和理解难度；
+  系统扩展难，一旦增加新产品，就需要修改工厂逻辑，不利于系统的扩展与维护；简单工厂模式中**所有产品的创建都是由同一个工厂创建，工厂类职责较重，业务逻辑较为复杂，具体产品与工厂类之间耦合度高，严重影响了系统的灵活性和扩展性。**
+
+
+
+### 工厂方法模式
+
+#### 定义
+
+* 在工厂模式中，工厂父类负责定义创建产品对象的公告接口，而工厂子类负责生成具体的产品对象。**目的是将产品的实例化操作延迟到工厂子类中完成**，通过工厂子类来确定究竟应该实例化哪一个具体产品类。
+
+
+
+#### 模式结构
+
+1. Product（抽象产品类）
+
+2. ConcreteProduct（具体产品类）
+
+3. AbstractFactory（抽象工厂类）
+
+4. Concrete（具体工厂类）
+
+   具体工厂是抽象工厂类的子类，实现了抽象工厂中定义的工厂方法，并可由客户调用，返回一个具体产品类的实例。
+
+
+
+#### 结构图
+
+![img](https://img-blog.csdnimg.cn/20210817084741848.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2tlbmppYW5xaTE2NDc=,size_16,color_FFFFFF,t_70)
+
+
+
+#### 优缺点
+
+* 优点：
+
+  系统的扩展性好，符合“开闭原则”  。系统加入新产品时，无须修改抽象工厂和抽象产品提供的接口，无须修改客户端，也无须修改其他的具体工厂和具体产品，而只要添加一个具体工厂和具体产品即可。
+
+* 缺点：
+
+  在添加新产品时，需要编写新的具体产品类，而且要提供与之对应的具体工厂类，系统中类的个数将成对增加，一定程度上增加了系统的复杂度。
+
+
+
+### 抽象工厂模式
+
+#### 定义
+
+* 抽象工厂模式是工厂方法模式的泛化版，工厂模式是一种特殊的抽象工厂模式，**在工厂模式中，每个具体工厂只能生产一种具体的产品**，如海尔电视机厂只生产海尔电视机，而抽象工厂方法模式中，**一个具体的工厂可以生产多个具体产品**。
+
+#### 模式结构
+
+1. Product（抽象产品类）
+2. ConcreteProduct（具体产品类）
+3. AbstractFactory（抽象工厂类）
+4. Concrete（具体工厂类）
+
+#### 结构图
+
+![img](https://img-blog.csdnimg.cn/20210819084940528.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2tlbmppYW5xaTE2NDc=,size_16,color_FFFFFF,t_70)
+
+
+
+#### 优缺点
+
+* 优点：
+  1. 抽象工厂模式将产品族的依赖与约束关系放到抽象工厂中，便于管理。
+  2. 职责解耦，用户不需要关心一堆自己不关心的细节，由抽象工厂来负责组件的创建
+  3. 切换产品族容易，只需要增加一个具体工厂实现，客户端选择另一个套餐就可以了
+* 缺点：
+  1. 抽象工厂模式类增加的速度很快，有一个产品族就需要增加一个具体工厂实现，比较繁琐
+  2. 产品族难以扩展产品。当产品族中增加一个产品时，抽象工厂接口中需要增加一个函数，对应的所有具体工厂实现都需要修改，修改放大严重。
+  3. 抽象工厂并未完全屏蔽创建细节，给出的都是组件。对于这种情况可以结合工厂模式或简单工厂模式一起使用。
+
+
+
 ## CMake编译
 
 ### 同一目录，单个源文件
@@ -382,11 +503,13 @@ int main()
 * argc指的是**文件个数**，注意：文件本身也算一个参数
 * argv即**指向字符串的指针数组**， **argv[0]代表文件本身**，argv[1]代表传入的第一个文件
 
-### STL容器
+### 顺序容器
 
-#### vector类
+#### 容器总览
 
-##### 类对象初始化
+![image-20221025222230871](/home/hzc/Note/image-20221025222230871.png)
+
+#### 类对象初始化
 
 - **直接法**：`vector<T> v1`
 
@@ -394,17 +517,11 @@ int main()
 
 - **列表**初始化：`vector<T> v1={1，2}`：v1的元素为1，2
 
-- **构造对象**初始化：`vector<int> v1(1`
-
-  
-
-  `0,1)`：v1拥有10个相同元素，均为1
+- **构造对象**初始化：`vector<int> v1(10,1)`：v1拥有10个相同元素，均为1
 
 注：组成vector的元素也可以是vector，如`vector<vector<int>>`，代表一个vector，里面的元素均是`vector<int>`类
 
-
-
-##### 初始化列表
+#### 初始化列表
 
 ```C++
 class foo
@@ -418,13 +535,81 @@ string name ;int id ;
 
 * 写在**构造函数**后面，以冒号开头，以成员名(值)的方式赋值
 
+#### vector类/deque类/string类操作
+
+* **尾部添加元素**：`v.push_back(t)`向v的尾端添加一个值为t的元素
+* **特定位置添加元素**：`v.insert(t.begin(),t)`第一个参数为迭代器，第二个参数为添加的元素
+* **插入范围内元素**：`v.insert(t.begin(),10,t)`第二个参数为添加元素的数目，返回更新后的迭代器
+* **访问元素**：`v.at(n)`返回下标为n的元素的引用
+* **删除单个元素**：`v.erase(p)`删除迭代器p所指向的元素
+* **删除范围元素**：`v.erase(b,e)`删除迭代器b和e范围内的元素
+* **删除全部元素**：`v.clear()`
+* **检测元素**：`v.empty()`没有元素返回真，否则返回假
+* **检索元素**：`v.size()`返回v中元素的个数
+* **节约容量**：`v.shrink_to_fit()`将capacity减少为与size相同大小
+* **最大容量**：`v.capacity()`返回v可以保存最多元素个数
+* **调节容量**：`v.reserve()`调节capacity至等同于size大小
+* **交换元素**：`v.swap(m)`或`swap(v,m)`交换v,m的元素
 
 
-##### 操作
 
-* **添加**元素：`v.push_back(t)`：向v的尾端添加一个值为t的元素
-* **检测**元素：`v.empty()`：没有元素返回真，否则返回假
-* **检索**元素：`v.size()`：返回v中元素的个数
+#### list类/forward_list类/deque类操作
+
+* **头部添加元素**：`l.push_front(n)`
+* **删除头部元素**：`l.pop_front()`
+* **交换元素**：`v.swap(m)`或`swap(v,m)`交换v,m的元素
+* **特定位置添加元素**：`l.insert_after(t.begin(),t)`第一个参数为迭代器，第二个参数为添加的元素
+* **插入范围内元素**：`l.insert_after(t.begin(),10,t)`第二个参数为添加元素的数目，返回更新后的迭代器
+* **删除单个元素**：`l.erase_after(p)`删除迭代器p所指向的元素
+* **删除范围元素**：`l.erase_after(b,e)`删除迭代器b和e范围内的元素
+* **调整大小**：`l.resize(n)`调整l的大小为n个元素
+* **调整并初始化**：`l.resize(n,t)`调整l的大小为n个元素，新添加的元素都初始化为t
+
+
+
+### 关联容器
+
+#### 容器总览
+
+![image-20221026120135061](/home/hzc/Note/image-20221026120135061.png)
+
+
+
+#### 类对象初始化
+
+对于map，我们将每个关键字-值对包围在花括号中`{key,value}`；
+
+对于set，元素类型就是关键字类型
+
+* **创建空对象**：`map<string,size_t> word_count`
+* **map列表初始化**：`map<string,string> authors = { {"Joyce","James"},{"Austen","Jane"} }`
+* **set列表初始化**：`set<string> exclude = {"the","but","and"}`
+
+
+
+#### pair类
+
+每个map容器内都存储着pair类，其中两个 成员分别命名为first和second，都是public的
+
+* **定义**：`pair<T1,T2> p(v1,v2)`p是一个成员类型为T1和T2的pair；first和second成员分别用v1和v2进行初始化
+* **返回值**：`make_pair(v1,v2)`返回一个用v1和v2初始化的pair
+* **调用**：`p.first`  `p.second`  返回数据成员
+
+
+
+#### map类/set类操作
+
+* **查找**：`m.find(word)`若找到，则返回指向该关键字的迭代器
+
+* **关键字类型**：`set/map<f,s>::key_type`
+* **关键字关联的类型**：`map<f,s>::mapped_type`（只适用于map）
+* **成员类型**：`set/map<f,s>::value_type`对于set，成员类型=关键字类型；对于map，该类型为`pair<const key_type,mapped_type>`
+* **添加元素**：`m.insert(v)/m.emplace(v)`v的类型为value_type
+* **删除元素**：`m.erase(k)`从m中删除每个关键字为k的元素，返回一个size_type值，指出删除的元素的数量
+* **指定删除**：`m.erase(p)`从m中删除迭代器p指向的元素，返回p之后的迭代器；若到尾部，则返回m.end()
+* **批量删除**：`m.erase(b,e)`删除迭代器b和e所表示的范围中的元素，返回e
+* **查找元素**：`m.find(k)`返回一个指向关键字为k的迭代器；若无，则返回尾后迭代器（用于检查）
+* **查询数量**：`m.count(k)`返回关键字等于k的元素的数量
 
 
 
@@ -1064,7 +1249,12 @@ void foo(T&& t)
 
 #### eigen库
 
-注：本书中#include<Eigen/Core>均要改为#include<eigen3/Eigen/Core>
+注：
+
+* 本书中#include<Eigen/Core>均要改为#include<eigen3/Eigen/Core>
+* 类的定义涉及到eigen库时在首行加上`EIGEN_MAKE_ALIGNED_OPERATOR_NEW;`
+
+
 
 ##### **norm**函数：
 
