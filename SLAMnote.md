@@ -86,32 +86,21 @@
 
 
 
-<<<<<<< HEAD
 ### 使用git流程
-=======
-#### 使用git流程
->>>>>>> cfd124ddfaa0dd9c8902e7b141a2555ddf5d637f
-
 * 在github中创建一个新的仓库
 * 在需要上传文件的文件夹中初始化仓库，选择Git Bash Here
 * `git init`
 * 上传文件*
   * 上传某个文件：`git add "文件名"`
   * 上传全部文件：`git add .`
-<<<<<<< HEAD
-=======
 
->>>>>>> cfd124ddfaa0dd9c8902e7b141a2555ddf5d637f
 * `git commit -m "注释"`*
 * `git branch -M main`
 * `git remote add origin git@github.com:用户名/仓库名`
 * `git pull origin 分支名`：将代码更新和远程仓库一致*
 * `git push -u origin main` （第一次提交）
 * `git push origin main`  （以后提交）*
-<<<<<<< HEAD
-* `git remote rm origin `移除远程仓库
-=======
->>>>>>> cfd124ddfaa0dd9c8902e7b141a2555ddf5d637f
+* `git remote rm origin`移除远程仓库
 
 注：带*为重复使用流程
 
