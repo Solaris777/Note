@@ -20,11 +20,31 @@
 
 
 
-vim操作
+### vim操作
 
 * `:wq`：保存退出
 * `dd`：删除所在行
-* `cc`：插入字符
+* `i`：插入字符
+
+
+
+### 升级Linux内核
+
+* 查看当前内核信息：`uname -a`
+* 查看可安装的内核：`apt-cache  search linux|grep linux-image`
+* 下载对应的内核版本：`sudo apt install linux-image-5.8.14-amd64 linux-headers-5.8.14-amd64 `（还可以去网站https://kernel.ubuntu.com/~kernel-ppa/mainline/下载）
+* 更新grub：`sudo update-grub`
+* 查看启动顺序：开启启动延时，在grub菜单项内有主菜单和子菜单，顺序从0开始
+* 修改启动顺序：`sudo nano /etc/default/grub`，修改`GRUB_DEFAULT`的值，格式为`"主菜单序号> 子菜单序号"`来选定想要启动的内核版本
+* 更新grub：`sudo update-grub`
+
+
+
+### 卸载多余的Linux内核
+
+* 查看系统内核版本：`dpkg --get-selections| grep linux`
+
+* 卸载内核软件包：`sudo apt-get remove --purge xxx`
 
 
 
@@ -2235,3 +2255,117 @@ https://blog.csdn.net/qq_41451702/article/details/122990734?spm=1001.2014.3001.5
 
 
 ### 设计SLAM系统
+
+
+
+
+
+
+
+## ROS机器人操作系统
+
+### 创建工作空间与功能包
+
+#### 创建工作空间
+
+```
+mkdir -p ~/catkin_wa/src
+cd ~/catkin_ws/src
+catkin_init_workspace
+```
+
+#### 编译工作空间（一定是在工作空间目录下编译）
+
+```
+cd ~/catkin_ws/
+catkin_make
+```
+
+#### 设置环境变量
+
+```
+source devel/setup.bash
+```
+
+#### 检查环境变量
+
+```
+echo $ROS_PACKAGE_PATH
+```
+
+#### 创建功能包（不同工作空间下，允许存在同名功能包）
+
+```
+cd ~/catkin_ws/src
+catkin_create_pkg test_pkg std_msgs rospy roscpp
+//参数分别为功能包名 依赖1 依赖2 依赖3 ...
+```
+
+#### 编译功能包
+
+```
+cd ~/catkin_ws
+catkin_make
+source ~/catkin_ws/devel/setup.sh
+```
+
+
+
+### 创建发布者Publisher
+
+#### 创建功能包
+
+```
+catkin_create_pkg learning_topic geometry_msgs turtlesim std_msgs rospy roscpp
+```
+
+#### 创建发布者代码
+
+* 初始化ROS节点
+* 向ROS Master注册节点信息
+* 创建消息数据
+* 按照一定频率循环发布信息
+* 配置CMakeList.txt（通用格式）
+  * add_executable(可执行文件名 源文件名)
+  * target_link_libraries(可执行文件名 ${catkin_LIBRARIES})
+
+#### 编译并运行发布者
+
+```
+catkin_make    //编译
+//隐藏了一步，通过在.bashrc最后一行添加source /home/hzc/catkin_ws/devel/setup.bash实现无需多次添加环境变量
+roscore
+rosrun turtlesim turtlesim_node
+rosrun learning_topic velocity_publisher
+```
+
+
+
+### 创建订阅者Subscriber
+
+#### 创建订阅者代码
+
+* 初始化ROS节点
+* 订阅需要的话题
+* 循环等待话题消息，接收到消息后进入回调函数（类似中断）
+* 在回调函数中完成消息处理
+* 配置CMakeList.txt
+
+#### 编译并运行订阅者
+
+```
+catkin_make
+roscore
+rosrun turtlesim turtlesim_node
+rosrun learning_topic velocity_publisher
+rosrun learning_topic pose_subscriber
+```
+
+
+
+关闭所有ros进程：`killall -9 rosmaster`
+
+
+
+
+
