@@ -2367,5 +2367,25 @@ rosrun learning_topic pose_subscriber
 
 
 
+## 装机
+
+
+
+**deepin系统就是坑，无法识别显示器，而且使用起来贼卡，存在一些依赖wen'ti**
+
+
+
+### 重装ubuntu系统
+
+**适用于之前的系统也是ubuntu系统的情况下，并且没卸载干净（重新装的时候出现了grub画面）**
+
+1. 制作老毛桃启动盘
+2. 把全部磁盘格式化并删除（包括EFI盘）
+3. 新建一个空的EFI盘
+4. 使用UltraISO软件制作ubuntu启动盘
+5. 安装ubuntu
+
+
+
 
 
