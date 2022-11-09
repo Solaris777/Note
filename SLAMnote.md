@@ -93,7 +93,11 @@
 * 上传文件*
   * 上传某个文件：`git add "文件名"`
   * 上传全部文件：`git add .`
-
+* `git config --global user.email "you@example.com"
+   git config --global user.name "Your Name"`设置个人账号
+* `ssh-keygen -t rsa -C "你的Git邮箱"`生成SSH秘钥
+* `cat ~/.ssh/id_rsa.pub`查看生成公钥
+* 复制全部内容到github的SSHkey上
 * `git commit -m "注释"`*
 * `git branch -M main`
 * `git remote add origin git@github.com:用户名/仓库名`
