@@ -2399,5 +2399,14 @@ rosrun learning_topic pose_subscriber
 
 
 
+## 学习路线
+
+1. 数学理论基础：《程序员的数学3：线性代数》+ **3Blue1Brown**视频
+1. 编程基础：黑马程序员视频 + 《C++Primer》
+1. 初识SLAM：《视觉SLAM十四讲》
+1. 扩展视野：《从零手写VIO》视频 + 《激光SLAM》视频
+1. 在ROS下使用SLAM：《机器人SLAM导航》 + 《ROS机器人编程》
+1. 理论至上：《机器人感知》 + 《机器人学中的状态估计》
+
 
 
