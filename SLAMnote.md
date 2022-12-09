@@ -13,6 +13,7 @@
 * `touch xxx.cpp`：创建一个cpp文件
 * `mkdir xxx/`：创建文件夹
 * ` rmdir xxx/`：删除文件夹
+* `sudo rm -r xxx`：shan
 * `dir`：查看有哪些文件
 * `pwd`：显示当前文件的绝对路径
 * `cat 文件名`：查看文件内容
