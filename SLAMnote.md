@@ -105,6 +105,8 @@
 * `git branch -M main`
 * `git remote add origin git@github.com:用户名/仓库名`
 * `git pull origin 分支名`：将代码更新和远程仓库一致*
+   * 如果报错为fatal:拒绝合并无关的历史，则输入`git pull --allow-unrelated-histories origin main`
+
 * `git push -u origin main` （第一次提交）
 * `git push origin main`  （以后提交）*
 * `git remote rm origin`移除远程仓库
