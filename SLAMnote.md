@@ -82,7 +82,7 @@
 * `git pull origin 分支名`：将代码更新和远程仓库一致*
 * `git pull origin main --allow-unrelated-histories `：上一条被拒绝时使用*
 * `git push origin main`：推送文件到远程仓库（不用带sudo，第一次在push后面加上-u）*
-* `git clone 仓库的SSH`：克隆某个仓库的所有内容（不用带sudo）*
+* `git clone 仓库的HTTPS`：克隆某个仓库的所有内容（不用带sudo）*
 * `git clone -b 分支名+仓库地址`：下载指定分支
 * `git rm 文件名`：删除单个文件（`git rm * -r`删除全部文件）
 * `ssh-keygen -t rsa -C 邮箱地址`：获取SSH
