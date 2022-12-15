@@ -63,7 +63,6 @@
 ## **git仓库操作**
 
 * `git init`：初始化仓库*
-
 * `git add`：添加一个文件到暂存区（index）
 * `git add .`：将修改加入暂存区*
 * `git commit -m " "`：把文件从暂存区推送到仓库（repository）,并添加注释*
@@ -84,6 +83,7 @@
 * `git pull origin main --allow-unrelated-histories `：上一条被拒绝时使用*
 * `git push origin main`：推送文件到远程仓库（不用带sudo，第一次在push后面加上-u）*
 * `git clone 仓库的SSH`：克隆某个仓库的所有内容（不用带sudo）*
+* `git clone -b 分支名+仓库地址`：下载指定分支
 * `git rm 文件名`：删除单个文件（`git rm * -r`删除全部文件）
 * `ssh-keygen -t rsa -C 邮箱地址`：获取SSH
 
@@ -104,9 +104,9 @@
 * `git commit -m "注释"`*
 * `git branch -M main`
 * `git remote add origin git@github.com:用户名/仓库名`
+   * `git remote rm origin`解除关联
 * `git pull origin 分支名`：将代码更新和远程仓库一致*
    * 如果报错为fatal:拒绝合并无关的历史，则输入`git pull --allow-unrelated-histories origin main`
-
 * `git push -u origin main` （第一次提交）
 * `git push origin main`  （以后提交）*
 * `git remote rm origin`移除远程仓库
